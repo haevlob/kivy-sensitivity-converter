@@ -1,6 +1,6 @@
 [app]
 
-# (str) Title of your application
+# (str) Title of your a pplication
 title = Sensitivity Converter
 
 # (str) Package name
