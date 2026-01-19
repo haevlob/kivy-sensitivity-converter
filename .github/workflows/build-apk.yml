@@ -32,22 +32,23 @@ jobs:
           key: ${{ runner.os }}-buildozer-${{ hashFiles('buildozer.spec') }}
       - name: Setup Android SDK and Accept Licenses
         run: |
-          export ANDROID_SDK_ROOT=$HOME/.buildozer/android/platform/android-sdk
-          mkdir -p $ANDROID_SDK_ROOT/cmdline-tools
-          cd $ANDROID_SDK_ROOT/cmdline-tools
+          mkdir -p $HOME/android-sdk/cmdline-tools
+          cd $HOME/android-sdk/cmdline-tools
           wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmdline-tools.zip
           unzip -q cmdline-tools.zip -d tmp
           mv tmp/cmdline-tools latest
           rm -rf tmp cmdline-tools.zip
-          export PATH=$PATH:$ANDROID_SDK_ROOT/cmdline-tools/latest/bin
+          export ANDROID_SDK_ROOT=$HOME/android-sdk
+          export ANDROID_HOME=$ANDROID_SDK_ROOT
+          export PATH=$PATH:$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools
           sdkmanager --update
           yes | sdkmanager --licenses
-          sdkmanager "build-tools;33.0.0" "platforms;android-33" "platform-tools" "tools"  # Добавлен "tools" для legacy sdkmanager
-          export PATH=$PATH:$ANDROID_SDK_ROOT/platform-tools:$ANDROID_SDK_ROOT/tools/bin
+          sdkmanager "build-tools;33.0.0" "platforms;android-33" "platform-tools"
       - name: Build APK
         run: |
-          export ANDROID_SDK_ROOT=$HOME/.buildozer/android/platform/android-sdk
-          export PATH=$PATH:$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$ANDROID_SDK_ROOT/tools/bin
+          export ANDROID_SDK_ROOT=$HOME/android-sdk
+          export ANDROID_HOME=$ANDROID_SDK_ROOT
+          export PATH=$PATH:$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools
           buildozer -v android debug
       - name: Upload APK
         uses: actions/upload-artifact@v4
