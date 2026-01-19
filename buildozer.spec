@@ -39,18 +39,24 @@ android.api = 33
 # Минимальная API
 android.minapi = 21
 
-# Автоматическое принятие лицензии SDK (фикс ошибки)
+# Автоматическое принятие лицензии SDK
 android.accept_sdk_license = True
 
-# Версия build-tools (для совместимости с Aidl)
+# Версия build-tools
 android.build_tools_version = 33.0.0
 
-# Версия NDK (рекомендуемая для p4a)
+# Версия NDK
 android.ndk = 25b
+
+# Компиляция с подавлением warnings
+android.extra_compile_args = -Wno-incompatible-function-pointer-types -Wno-int-to-void-pointer-cast
+
+# Branch python-for-android (develop для фиксов)
+p4a.branch = develop
 
 [buildozer]
 
-# Уровень логов (2 для детального вывода)
+# Уровень логов
 log_level = 2
 
 # Предупреждение, если root
