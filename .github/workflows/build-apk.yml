@@ -29,7 +29,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .buildozer
-          key: ${{ runner.os }}-buildozer-${{ hashFiles('buildozer.spec') }}
+          key: \( {{ runner.os }}-buildozer- \){{ hashFiles('buildozer.spec') }}
       - name: Setup Android SDK and Accept Licenses
         run: |
           mkdir -p $HOME/android-sdk/cmdline-tools
