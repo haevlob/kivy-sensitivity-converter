@@ -42,12 +42,12 @@ jobs:
           export PATH=$PATH:$ANDROID_SDK_ROOT/cmdline-tools/latest/bin
           sdkmanager --update
           yes | sdkmanager --licenses
-          sdkmanager "build-tools;33.0.0" "platforms;android-33" "platform-tools"
-          export PATH=$PATH:$ANDROID_SDK_ROOT/platform-tools
+          sdkmanager "build-tools;33.0.0" "platforms;android-33" "platform-tools" "tools"  # Добавлен "tools" для legacy sdkmanager
+          export PATH=$PATH:$ANDROID_SDK_ROOT/platform-tools:$ANDROID_SDK_ROOT/tools/bin
       - name: Build APK
         run: |
           export ANDROID_SDK_ROOT=$HOME/.buildozer/android/platform/android-sdk
-          export PATH=$PATH:$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools
+          export PATH=$PATH:$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$ANDROID_SDK_ROOT/tools/bin
           buildozer -v android debug
       - name: Upload APK
         uses: actions/upload-artifact@v4
