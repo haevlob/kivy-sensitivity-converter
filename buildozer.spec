@@ -9,35 +9,34 @@ package.name = kivysensitivityconverter
 # (str) Package domain (needed for android/ios packaging)
 package.domain = org.haevlob
 
-# (str) Source dir where to find main.py
+# (str) Source code where the main.py live
 source.dir = .
 
 # (list) Source files to include (let empty to include all the files)
 source.include_exts = py,png,jpg,kv,atlas
 
-# (list) List of inclusions using pattern matching
-#source.include_patterns = assets/*,images/*.png
+# (list) List of inclusions for a full inclusion (dirs, files)
+source.include_patterns = 
 
 # (list) Source files to exclude (let empty to not exclude anything)
-#source.exclude_exts = spec
+source.exclude_exts = spec
 
 # (list) List of directory to exclude (let empty to not exclude anything)
-#source.exclude_dirs = tests, bin, venv
+source.exclude_dirs = tests, bin, venv
 
 # (list) List of exclusions using pattern matching
-# Do not prefix with './'
-#source.exclude_patterns = license,images/*/*.jpg
+source.exclude_patterns = license,images/*/*.jpg
 
 # (str) Application versioning (method 1)
 version = 0.1
 
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,kivy
-requirements = python3,kivy==2.3.0  # Pin Kivy to stable version
+requirements = python3,kivy==master
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
-#requirements.source.kivy = ../../kivy
+# requirements.source.kivy = ../../kivy
 
 # (str) Presplash of the application
 #presplash.filename = %(source.dir)s/data/presplash.png
@@ -62,16 +61,16 @@ orientation = portrait
 osx.python_version = 3
 
 # Kivy version to use
-osx.kivy_version = 2.3.0
+osx.kivy_version = 1.9.1
 
 #
 # Android specific
 #
 
-# (bool) Indicate if the application should be fullscreen or not
+# (bool) Indicate whether the application should be fullscreen or not
 fullscreen = 0
 
-# (string) Presplash background color (for splashscreen mode)
+# (string) Presplash background color (for android toolchain)
 # Supported formats are: #RRGGBB #AARRGGBB or one of the following names:
 # red, blue, green, black, white, gray, cyan, magenta, yellow, lightgray,
 # darkgray, grey, lightgrey, darkgrey, aqua, fuchsia, lime, maroon, navy,
@@ -79,31 +78,35 @@ fullscreen = 0
 #android.presplash_color = #FFFFFF
 
 # (string) Presplash animation using Lottie format.
-# see https://lottiefiles.com/ for examples and https://airbnb.design/lottie/
-# for general documentation.
-# Lottie files can be created using various tools, like Adobe After Effect or Synfig.
-#android.presplash_lottie = "path/to/lottie/file.json"
+# see https://airbnb.design/lottie/ for examples and https://lottiefiles.com
+# if animation is too big then use presplash.jpg background image and
+# lottie image size < 100Kb.
+# presplash.lottie = "path/to/lottie.json"
 
-# (str) Adaptive presplash background for splashscreen
-#android.adaptive_presplash_background = #FFFFFF
+# (str) Adaptive Icon of the application (used if Android API level is 26+ at runtime)
+#icon.adaptive_foreground.filename = %(source.dir)s/data/icon_fg.png
+#icon.adaptive_background.filename = %(source.dir)s/data/icon_bg.png
 
 # (list) Permissions
-# (See https://python-for-android.readthedocs.io/en/latest/buildoptions/#build-options for all the supported syntaxes and properties)
+# (See https://python-for-android.readthedocs.io/en/latest/buildoptions/#build-options-1 for all the available BOOLEAN build options)
 #android.permissions = android.permission.INTERNET, (name=android.permission.WRITE_EXTERNAL_STORAGE;maxSdkVersion=18)
+
+# (list) features (adds uses-feature -tags to manifest)
+#android.features = android.hardware.usb.host
 
 # (int) Target Android API, should be as high as possible.
 android.api = 33
 
-# (int) Minimum API your APK / AAB will support.
+# (int) Minimum API your APK / App Bundle will support.
 android.minapi = 21
 
-# (str) Android SDK version to use
+# (int) Android SDK version to use
 #android.sdk = 20
 
 # (str) Android NDK version to use
-android.ndk = 23b  # Downgraded to 23b for compatibility
+android.ndk = 25b
 
-# (int) Android NDK API to use. This is the minimum API your app will support, it should usually remain at the default.
+# (int) Android NDK API to use. This is the minimum API your app will support, it should usually equal android.minapi.
 android.ndk_api = 21
 
 # (bool) Use --private storage (True) or --dir public storage (False)
@@ -127,7 +130,7 @@ android.ndk_api = 21
 # android.accept_sdk_license = False
 
 # (str) Android entry point, default is ok for Kivy-based app
-#android.entrypoint = org.kivy.android.PythonActivity
+# android.entrypoint = org.kivy.android.PythonActivity
 
 # (str) Android app theme, default is ok for Kivy-based app
 # android.theme = @android:style/Theme.NoTitleBar
@@ -144,12 +147,8 @@ android.ndk_api = 21
 # (list) List of Java .jar files to add to the libs so that pyjnius can access
 # their classes. Don't add jars that you do not need, since extra jars can slow
 # down the build process. Allows wildcards matching, for example:
-# ouya_*.jar or org/android licensing/*.jar.
-# You can also use URL, for example:
-# jars = https://mycompany.com/myproject.jar
-# or absolute paths for when the jar is already installed locally:
-# jars = /path/to/myproject.jar
-#android.add_jars = foo.jar,bar.jar,path/to/more/*.jar,https://mycompany.com/myproject.jar
+# OUYA-ODK/libs/*.jar
+#android.add_jars = foo.jar,bar.jar,path/to/more/*.jar,another.jar
 
 # (list) List of Java files to add to the android project (can be java or a
 # directory containing the files)
@@ -159,22 +158,33 @@ android.ndk_api = 21
 #android.add_aars =
 
 # (list) Put these files or directories in the apk assets directory.
-# Either form may be used, and assets need not exist or be in the source
-# directory. That is, 'foo/bar/man.png' will copy from source.dir/foo/bar/man.png
-# and 'other_dir' will copy the full contents of other_dir hierachically.
-#android.add_assets = source_dir relative path
+# Either form may be used, and assets need not exist or be directories.
+# The form *-asset relative paths are relative to the Python project directory
+#android.add_assets = source_asset_relative_path
+#android.add_assets = source_asset_path:zip_destination_path
+#android.add_assets = source_asset_path:destination_path
+
+# (list) Put these files or directories in the apk res directory.
+# Either form may be used (even mixing both forms in the same list).
+# Relative paths are relative to the Python project directory
+#android.add_resources = source_resource_relative_path
+#android.add_resources = source_resource_path:zip_destination_path
+#android.add_resources = source_resource_path:destination_path
 
 # (list) Gradle dependencies to add
 #android.gradle_dependencies =
 
-# (bool) Enable AndroidX support. Enable when 'android.gradle_dependencies'
-# contains an 'androidx' dependency.
-#android.enable_androidx = False
+# (bool) Add google play services (only if you're using admob or billing)
+#android.enable_play_services = False
+
+# (bool) Add google play services for Firebase (only if you're using firebase)
+#android.enable_firebase = False
 
 # (list) add java compile options
 # this can for example be necessary when importing certain java libraries using the 'android.gradle_dependencies' option
 # see https://developer.android.com/studio/write/java8-support for further information
-android.add_compile_options = -Wno-incompatible-function-pointer-types  # Suppress pointer type warnings
+android.add_compile_options = "sourceCompatibility = 1.8", "targetCompatibility = 1.8"
+android.extra_compile_args = -Wno-incompatible-function-pointer-types -Wno-incompatible-pointer-types-discards-qualifiers -Wno-int-conversion
 
 # (list) Gradle repositories to add {can be necessary for some android.gradle_dependencies}
 # please enclose in double quotes 
@@ -182,12 +192,11 @@ android.add_compile_options = -Wno-incompatible-function-pointer-types  # Suppre
 #android.add_gradle_repositories =
 
 # (list) packaging options to add 
-# see https://developer.android.com/reference/proguard.html
-# can be necessary to solve issues when using --deps ( --backends ) option on API<27
-# for example, to avoid dex being exceeded by api versions that
-# are used only in a third-party dependency as lxml (versions greater than 4.6.1)
-# and avoid conflicts with the base dependencies.
-#android.add_packaging_options = "exclude 'META-INF/NOTICE' / 'META-INF/LICENSE' / 'META-INF/DEPENDENCIES' / 'META-INF/*'"
+# see https://developer.android.com/reference/tools/gradle-api/7.1/com/android/build/api/dsl/PackagingOptions
+# can be necessary to solve conflicts in gradle_dependencies
+# please enclose in double quotes 
+# e.g. android.add_packaging_options = "exclude 'META-INF/common.kotlin_module'", "exclude 'META-INF/*.kotlin_module'"
+#android.add_packaging_options =
 
 # (list) Java classes to add as activities to the manifest.
 #android.add_activities = com.example.ExampleActivity
@@ -202,8 +211,8 @@ android.add_compile_options = -Wno-incompatible-function-pointer-types  # Suppre
 # (str) XML file to include as an intent filters in <activity> tag
 #android.manifest.intent_filters =
 
-# (list) Copy these files to src/main/res/xml (or res/values/english)?
-#android.add_xml =
+# (list) Copy these files to src/main/res/xml (or res/xml if it exists)
+#android.res_xml = 
 
 # (str) launchMode to use for the main activity
 #android.manifest.launch_mode = standard
@@ -215,46 +224,93 @@ android.add_compile_options = -Wno-incompatible-function-pointer-types  # Suppre
 #android.add_libs_x86 = libs/android-x86/*.so
 #android.add_libs_mips = libs/android-mips/*.so
 
-# (bool) Use --assets-public.mp3 (instead of --private) storage
-#android.assets_public_mp3 = False
+# (bool) Use prebuilt libs extracted from libs/armeabi-v7a/, instead of building recipes
+#android.use_prebuild_armeabi_v7a = False
+
+# (bool) Indicate whether the screen should stay on
+# Don't forget to add the WAKE_LOCK permission if you set this to True
+#android.wakelock = False
+
+# (list) Android application meta-data to set (key=value format)
+#android.meta_data =
+
+# (str) Android logcat filters to use
+#android.logcat_filters = *:S python:D
+
+# (bool) Android logcat only display log for activity's pid
+#android.logcat_pid_only = False
+
+# (str) Android additional adb args
+#android.adb_args = -H host.docker.internal
 
 # (bool) Copy library instead of making a libpymodules.so
 #android.copy_libs = 1
 
 # (list) The Android archs to build for, choices: armeabi-v7a, arm64-v8a, x86, x86_64
-# In past, was `android.arch` as we weren't supporting builds for multiple archs at the same time.
-android.archs = arm64-v8a  # Only build for 64-bit to avoid 32-bit compilation issues
-
-# (int) overrides automatic versionCode computation (used in build.gradle)
-# this is not the same as app version and should only be tweaked if you know what you're doing.
-# android.numeric_version = 1
+# In past, was `android.arch` as a single string, but now use a list for multiple archs
+# Note: Important to select compatible archs for target device processors
+android.archs = arm64-v8a
 
 # (bool) enables Android auto backup feature (Android API >=23)
 android.allow_backup = True
 
-# (str) the filename of the android backup rules (see android SDK docs)
-#android.backup_rules = my_backup_rules.xml
+# (str) NEW - the backup rules (see https://developer.android.com/guide/topics/data/autobackup#IncludingFiles)
+#android.backup_rules = %(source.dir)s/backup_rules.xml
 
-# (str) extra arguments for aapt
-#android.aapt_opts = 
+# (str) If you need to insert variables into your AndroidManifest.xml file,
+# you can do so with the manifestPlaceholders property.
+# This property takes a map of key-value pairs. (via a string)
+# Usage example : android.manifest_placeholders = [myCustomVar:'"my custom variable"', otherCustomVar:'"my other custom variable"']
+#android.manifest_placeholders = [:]
 
-# (str) Python for android (p4a) branch to use, defaults to master
-p4a.branch = master  # Use master branch for stability
+# (bool) Skip byte compile the generated java files
+#android.no_byte_compile_java = False
 
-# (str) Local path to python-for-android (if not using branch)
+# (bool) disables the compilation of py to pyc & pyo files that are unnecessary for a python library
+android.no_compile_pyo = True
+
+# (str) The format used to package the app for release mode (aab or apk or aar)
+#android.release_artifact = aab
+
+# (str) The format used to package the app for debug mode (apk or aar)
+#android.debug_artifact = apk
+
+#
+# Python for android (p4a) specific
+#
+
+# (str) python-for-android URL to use for checkout
+#p4a.url =
+
+# (str) python-for-android fork to use in case if p4a.url is not specified, defaults to upstream (kivy)
+#p4a.fork = kivy
+
+# (str) python-for-android branch to use, defaults to master
+p4a.branch = develop
+
+# (str) python-for-android specific commit to use, defaults to HEAD, must be within p4a.branch.
+#p4a.commit = master
+
+# (str) python-for-android git clone directory (if empty, it will be automatically cloned from github)
+#p4a.source_dir =
+
+# (str) The directory in which python-for-android should look for your own build recipes (if any)
 #p4a.local_recipes =
 
-# (str) bootstrap to use for android builds
+# (str) Filename to the hook for p4a
+#p4a.hook =
+
+# (str) Bootstrap to use for android builds
 # p4a.bootstrap = sdl2
 
-# (str) port number to specify an explicit --port= p4a argument (eg for bootstrap flask)
+# (int) port number to specify an explicit --port= p4a argument (eg for bootstrap flask)
 #p4a.port =
 
-# Control whether the build archive is dated
-#p4a.build_archive = False
+# Control whether p4a builds a fat AAR (or no AAR) in dist mode
+#p4a.aar = False
 
-# enables pretty build output
-#p4a.no_byte_compile_python = False
+# (list) List of additional args for p4a
+#p4a.extra_args =
 
 #
 # iOS specific
@@ -262,7 +318,21 @@ p4a.branch = master  # Use master branch for stability
 
 # (str) Path to a custom kivy-ios folder
 #ios.kivy_ios_dir = ../kivy-ios
- # (str) Name of the certificate to use for signing the debug version
+# Alternately, specify the URL and branch of a git checkout:
+ios.kivy_ios_url = https://github.com/kivy/kivy-ios
+ios.kivy_ios_branch = master
+
+# Another platform dependency: ios-deploy
+# Uncomment to use a custom checkout
+#ios.ios_deploy_dir = ../ios_deploy
+# Or specify URL and branch
+#ios.ios_deploy_url = https://github.com/phonegap/ios-deploy
+#ios.ios_deploy_branch = 1.10.0
+
+# (bool) Whether or not to sign the code
+ios.codesign.allowed = false
+
+# (str) Name of the certificate to use for signing the debug version
 # Get a list of available identities: buildozer ios list_identities
 #ios.codesign.debug = "iPhone Developer: <lastname> <firstname> (<hexstring>)"
 
@@ -272,17 +342,26 @@ p4a.branch = master  # Use master branch for stability
 # (str) Name of the certificate to use for signing the release version
 #ios.codesign.release = %(ios.codesign.debug)s
 
-
 # (str) The development team to use for signing the release version
 #ios.codesign.development_team.release = <hexstring>
 
-# (str) URL pointing to .ipa file to be installed by the runner
-# Only supported in xcb mode
+# (str) URL pointing to .ipa file to be installed
+# This option should be defined along with `display_image_url` and `full_size_image_url` options when you want to install your app by "Over the air"
+# PLEASE NOTE that this option doesn't currently work on iOS Simulator
+# (only real iOS devices are supported for OTA)
 #ios.manifest.app_url =
 
-# (str) URL pointing to an icon (100x100px) to be displayed by the runner
-# Only supported in xcb mode
-#ios.manifest.icon_url =
+# (str) URL pointing to an icon (100x100px) to be displayed during download
+# This option should be defined along with `app_url` and `full_size_image_url` options when you want to install your app by "Over the air"
+# PLEASE NOTE that this option doesn't currently work on iOS Simulator
+# (only real iOS devices are supported for OTA)
+#ios.manifest.display_image_url =
+
+# (str) URL pointing to a large icon (512x512px) to be used by iTunes
+# This option should be defined along with `app_url` and `display_image_url` options when you want to install your app by "Over the air"
+# PLEASE NOTE that this option doesn't currently work on iOS Simulator
+# (only real iOS devices are supported for OTA)
+#ios.manifest.full_size_image_url =
 
 
 [buildozer]
@@ -300,9 +379,26 @@ warn_on_root = 1
 # bin_dir = ./bin
 
 #    -----------------------------------------------------------------------------
-#    # List as sections, where each section is a profile that allow us to easily
-#    # switch options such as p4a.branch or p4a.bootstrap.
-#    # For example, to build with pygame instead of sdl2, activate the following
-#    # profile (don't forget to uncomment)
-#[myprofile]
-#p4a.bootstrap = pygame
+#    # List as sections, where each section is a command to run before build
+#    # e.g.
+#    # prebuild_sections = section1, section2
+#    # [section1]
+#    # command = echo "Running section1"
+#    #
+#    # [section2]
+#    # command = echo "Running section2"
+#    # recipe_deps = recipe1
+#    #
+#    # Sections will be run in the order specified.
+#    # If you don't want a section to be run, delete it from prebuild_sections
+#    # Sections will only be run if they are included in prebuild_sections
+#    # Commands are run using os.system, so be careful with quoting
+#    # If a section has a recipe_deps key, it will be run after the recipe's build
+#    # If a section has a recipe_deps key, it will be run only if the recipe is built
+#    # recipe_deps can be a comma-separated list of recipe names
+#    #
+#    # prebuild_sections =
+#    #
+#    # [section_name]
+#    # command =
+#    # recipe_deps =
