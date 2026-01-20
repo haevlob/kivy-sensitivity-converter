@@ -34,11 +34,11 @@ android.ndk = 25b
 
 android.bootstrap = sdl2
 
-p4a.branch = master
+p4a.branch = develop
 
 p4a.fork = kivy
 
-android.extra_compile_args = -Wno-implicit-function-declaration -Wno-error=implicit-function-declaration -Wno-incompatible-function-pointer-types -Wno-int-to-void-pointer-cast
+android.extra_compile_args = -Wno-implicit-function-declaration -Wno-error=implicit-function-declaration -Wno-incompatible-function-pointer-types -Wno-int-to-void-pointer-cast -Wno-error
 
 [buildozer]
 
