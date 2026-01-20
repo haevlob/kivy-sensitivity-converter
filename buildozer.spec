@@ -12,7 +12,7 @@ source.include_exts = py,png,jpg,kv,atlas
 
 version = 0.1
 
-requirements = python3,kivy
+requirements = hostpython3==3.7.18,python3,kivy  # hostpython3 for 3.7 fix
 
 icon.filename = %(source.dir)s/data/icon.png
 
@@ -34,7 +34,7 @@ android.ndk = 25b
 
 android.bootstrap = sdl2
 
-p4a.branch = master
+p4a.branch = develop
 
 p4a.fork = kivy
 
