@@ -51,11 +51,14 @@ android.ndk = 25b
 # Bootstrap для graphics (SDL2 для Android)
 android.bootstrap = sdl2
 
-# Branch python-for-android (develop для фиксов warnings)
-p4a.branch = develop
+# Branch python-for-android (master для стабильности)
+p4a.branch = master
 
 # Fork python-for-android
 p4a.fork = kivy
+
+# Флаги компиляции для подавления errors/warnings
+android.extra_compile_args = -Wno-implicit-function-declaration -Wno-int-to-void-pointer-cast -Wno-incompatible-function-pointer-types -Wno-sign-compare -Wno-error
 
 [buildozer]
 
