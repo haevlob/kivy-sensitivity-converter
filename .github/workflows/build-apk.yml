@@ -4,7 +4,7 @@ on: [push, workflow_dispatch]  # Запускается при push или вр�
 
 jobs:
   build:
-    runs-on: ubuntu-20.04  # Изменено на 20.04 для совместимости compilation
+    runs-on: ubuntu-22.04
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
