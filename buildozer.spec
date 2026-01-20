@@ -57,8 +57,8 @@ p4a.branch = master
 # Fork python-for-android
 p4a.fork = kivy
 
-# Флаги компиляции для подавления errors/warnings
-android.extra_compile_args = -Wno-implicit-function-declaration -Wno-int-to-void-pointer-cast -Wno-incompatible-function-pointer-types -Wno-sign-compare -Wno-error
+# Флаги компиляции для фикса warnings и errors
+android.extra_compile_args = -Wno-implicit-function-declaration -Wno-incompatible-function-pointer-types -Wno-int-to-void-pointer-cast -Wno-error=implicit-function-declaration
 
 [buildozer]
 
