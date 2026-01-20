@@ -4,14 +4,14 @@ on: [push, workflow_dispatch]  # Запускается при push или вр�
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-20.04  # Изменено на 20.04 для совместимости с clang/Python compilation
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.8'  # Изменено на 3.8 для фикса compilation bugs
+          python-version: '3.7'  # Изменено на 3.7 для фикса debugging module error
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -24,7 +24,7 @@ jobs:
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install kivy buildozer cython==0.29.36
+          pip install kivy buildozer cython==0.29.21  # Изменено на 0.29.21 для Python 3.7
       - name: Cache Buildozer
         uses: actions/cache@v4
         with:
