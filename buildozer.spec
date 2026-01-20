@@ -38,7 +38,7 @@ p4a.branch = develop
 
 p4a.fork = kivy
 
-android.extra_compile_args = -Wno-implicit-function-declaration -Wno-incompatible-function-pointer-types -Wno-int-to-void-pointer-cast -Wno-error=implicit-function-declaration
+android.extra_compile_args = -Wno-implicit-function-declaration -Wno-incompatible-function-pointer-types -Wno-int-to-void-pointer-cast -Wno-error=implicit-function-declaration -Wno-implicit-int
 
 [buildozer]
 
