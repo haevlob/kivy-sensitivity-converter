@@ -34,7 +34,7 @@ android.ndk = 25b
 
 android.bootstrap = sdl2
 
-p4a.branch = develop
+p4a.branch = master
 
 p4a.fork = kivy
 
