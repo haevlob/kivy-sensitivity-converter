@@ -1,48 +1,33 @@
 [app]
-
 title = Sensitivity Converter
-
-package.name = sensitivityconverter
-
-package.domain = org.test
+package.name = sensconverter
+package.domain = org.example
 
 source.dir = .
-
 source.include_exts = py,png,jpg,kv,atlas
 
 version = 0.1
 
 requirements = python3,kivy
 
-icon.filename = %(source.dir)s/data/icon.png
-
 orientation = portrait
+fullscreen = 1
 
-fullscreen = 0
+icon.filename = %(source.dir)s/icon.png
 
 android.permissions = INTERNET
-
 android.api = 33
-
 android.minapi = 21
-
-android.accept_sdk_license = True
-
-android.build_tools_version = 33.0.0
-
+android.sdk = 33
 android.ndk = 25b
 
-android.bootstrap = sdl2
+android.archs = arm64-v8a,armeabi-v7a
 
-p4a.branch = master
+android.allow_backup = True
+android.private_storage = False
 
-p4a.fork = kivy
-
-# Самые важные строки — подавляем ошибки компиляции
-android.extra_compile_args = -Wno-implicit-function-declaration -Wno-error=implicit-function-declaration -Wno-incompatible-function-pointer-types -Wno-int-to-void-pointer-cast -Wno-error -Wno-unused-variable -Wno-unused-but-set-variable
+android.logcat_filters = *:S python:D
 
 [buildozer]
-
 log_level = 2
-
 warn_on_root = 1
