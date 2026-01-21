@@ -1,46 +1,30 @@
 [app]
-
-# Название приложения (как будет видно в лаунчере)
 title = Sensitivity Converter
+package.name = sensconverter
+package.domain = com.devonmobile
 
-# Имя пакета (должно быть уникальным, в стиле обратного домена)
-package.name = sensitivityconverter
-
-# Домен пакета (обычно org.твойник или com.твойник)
-package.domain = org.example
-
-# Версия приложения
-version = 1.0
-
-# Точка входа — имя файла с классом App
 source.dir = .
-source.include_exts = py,png,jpg,kv,atlas
+source.include_exts = py,png,jpg,kv,atlas,ttf
 
-# Зависимости — очень важно перечислить ВСЕ используемые модули
-requirements = python3,kivy==2.3.0
+requirements =
+    python3
+    kivy==2.3.0             # или kivy==2.4.0 если хочешь самую свежую
+    cython==0.29.37         # очень важно — новые версии часто ломают
+    pillow                  # если используешь изображения
 
-# Ориентация экрана
 orientation = portrait
+fullscreen = 1
 
-# Разрешения (если нужны — например интернет, камера и т.д.)
-# android.permissions = INTERNET,WRITE_EXTERNAL_STORAGE
+android.permissions =
 
-# Иконка и сплеш (пока можно пропустить)
-#icon.filename = %(source.dir)s/icon.png
-#presplash.filename = %(source.dir)s/presplash.png
-
-# Минимальная версия Android
-android.api = 33
-android.minapi = 21
-android.sdk = 20
+# Версии Android (актуально на 2026)
+android.api = 34
+android.minapi = 24
 android.ndk = 25b
+android.archs = arm64-v8a, armeabi-v7a   # или только arm64-v8a, если не нужна поддержка старых
 
-# Тип сборки
-android.release = False           # для debug-сборки
-# android.release = True          # раскомментировать для release (нужен keystore)
+p4a.bootstrap = sdl2
+p4a.local_recipes =
 
-[buildozer]
-
-# Логи — полезно включить на время отладки
 log_level = 2
 warn_on_root = 1
