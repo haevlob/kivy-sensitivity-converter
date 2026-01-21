@@ -1,62 +1,46 @@
-name: Build Kivy APK
+name: Build Android APK
 
-on: [push, workflow_dispatch]
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-22.04
-    timeout-minutes: 60
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.8'
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
+          python-version: "3.10"
+
       - name: Install system dependencies
         run: |
           sudo apt update
-          sudo apt install -y git zip unzip openjdk-17-jdk python3-dev libjpeg-dev zlib1g-dev libpng-dev libgif-dev libltdl-dev libssl-dev libffi-dev autoconf libtool pkg-config libncurses5-dev libncursesw5-dev libtinfo5 cmake ccache libgles2-mesa-dev libgles1 libopengl0 libgl1-mesa-dev libglu1-mesa-dev libegl1-mesa-dev freeglut3-dev mesa-common-dev libglm-dev libreadline-dev libsqlite3-dev libbz2-dev
-      - name: Install Python dependencies
+          sudo apt install -y \
+            git zip unzip openjdk-17-jdk \
+            autoconf libtool pkg-config \
+            zlib1g-dev libncurses5-dev libncursesw5-dev \
+            libtinfo5 cmake libffi-dev libssl-dev
+
+      - name: Install Buildozer & Cython
         run: |
           python -m pip install --upgrade pip
-          pip install kivy buildozer cython==0.29.36
-      - name: Cache Buildozer
-        uses: actions/cache@v4
-        with:
-          path: .buildozer
-          key: ${{ runner.os }}-buildozer-${{ hashFiles('buildozer.spec') }}
-      - name: Setup Android SDK and Accept Licenses
-        run: |
-          mkdir -p $HOME/android-sdk/cmdline-tools
-          cd $HOME/android-sdk/cmdline-tools
-          wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmdline-tools.zip
-          unzip -q cmdline-tools.zip -d tmp
-          mv tmp/cmdline-tools latest
-          rm -rf tmp cmdline-tools.zip
-          export ANDROID_SDK_ROOT=$HOME/android-sdk
-          export ANDROID_HOME=$ANDROID_SDK_ROOT
-          export PATH=$PATH:$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools
-          sdkmanager --update
-          yes | sdkmanager --licenses
-          sdkmanager "build-tools;33.0.0" "platforms;android-33" "platform-tools"
+          pip install buildozer cython==0.29.36
+
+      - name: Accept Android SDK licenses
+        run: yes | sdkmanager --licenses || true
+
       - name: Build APK
         run: |
-          export ANDROID_SDK_ROOT=$HOME/android-sdk
-          export ANDROID_HOME=$ANDROID_SDK_ROOT
-          export PATH=$PATH:$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools
-          export CFLAGS="-Wno-implicit-function-declaration -Wno-error=implicit-function-declaration -Wno-incompatible-function-pointer-types -Wno-int-to-void-pointer-cast -Wno-error -Wno-unused-variable -Wno-unused-but-set-variable"
-          export CXXFLAGS="$CFLAGS"
-          buildozer -v android debug || echo "Build failed, saving log" > build_failed.txt
-      - name: Upload APK or Log
-        if: always()
+          buildozer android debug
+
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: apk-or-log
-          path: |
-            bin/*.apk
-            *.txt
+          name: apk
+          path: bin/*.apk
