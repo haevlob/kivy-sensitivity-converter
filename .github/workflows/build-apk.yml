@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-      - name: Checkout repository
+      - name: Checkout repo
         uses: actions/checkout@v4
 
       - name: Set up Python
@@ -18,22 +18,44 @@ jobs:
         with:
           python-version: "3.10"
 
-      - name: Install system dependencies
+      - name: Install system packages
         run: |
           sudo apt update
           sudo apt install -y \
-            git zip unzip openjdk-17-jdk \
+            openjdk-17-jdk \
+            unzip zip \
             autoconf libtool pkg-config \
             zlib1g-dev libncurses5-dev libncursesw5-dev \
             libtinfo5 cmake libffi-dev libssl-dev
 
-      - name: Install Buildozer & Cython
+      - name: Install Buildozer
         run: |
           python -m pip install --upgrade pip
           pip install buildozer cython==0.29.36
 
-      - name: Accept Android SDK licenses
-        run: yes | sdkmanager --licenses || true
+      - name: Install Android command line tools
+        run: |
+          mkdir -p $HOME/android/cmdline-tools
+          cd $HOME/android
+          wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+          unzip commandlinetools-linux-*.zip
+          mv cmdline-tools cmdline-tools/latest
+
+      - name: Set ANDROID_HOME
+        run: |
+          echo "ANDROID_HOME=$HOME/android" >> $GITHUB_ENV
+          echo "PATH=$HOME/android/cmdline-tools/latest/bin:$HOME/android/platform-tools:$PATH" >> $GITHUB_ENV
+
+      - name: Accept Android licenses
+        run: |
+          yes | sdkmanager --licenses
+
+      - name: Install Android SDK packages
+        run: |
+          sdkmanager \
+            "platform-tools" \
+            "platforms;android-33" \
+            "build-tools;33.0.2"
 
       - name: Build APK
         run: |
