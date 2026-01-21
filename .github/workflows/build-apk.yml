@@ -1,50 +1,41 @@
 name: Build Android APK
 
 on:
-  release:
-    types: [published]
-  workflow_dispatch:  # Чтобы можно было запустить вручную
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
+
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    - name: Checkout repository
+      uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
 
-      - name: Install Buildozer dependencies
-        run: |
-          sudo apt update
-          sudo apt install -y \
-            git zip unzip openjdk-17-jdk \
-            python3-pip autoconf libtool pkg-config \
-            zlib1g-dev libncurses5-dev libncursesw5-dev \
-            libtinfo5 cmake libffi-dev libssl-dev
+    - name: Cache Buildozer & NDK/SDK
+      uses: actions/cache@v4
+      with:
+        path: |
+          .buildozer
+          ~/.buildozer
+        key: buildozer-${{ hashFiles('buildozer.spec') }}
 
-      - name: Install Buildozer
-        run: |
-          pip install --user buildozer==1.5.0 cython==0.29.33
+    - name: Build APK with Buildozer
+      uses: digreatbrian/buildozer-action@v2
+      with:
+        python-version: 3.11
+        buildozer-cmd: buildozer android debug
 
-      - name: Add Buildozer to PATH
-        run: echo "$HOME/.local/bin" >> $GITHUB_PATH
-
-      - name: Build APK (debug)
-        run: |
-          buildozer -v android debug
-
-      - name: Upload APK as artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: SensitivityConverter-APK
-          path: bin/*.apk
-
-      - name: Upload APK to release
-        if: github.event_name == 'release'
-        uses: softprops/action-gh-release@v2
-        with:
-          files: bin/*.apk
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: app-debug.apk
+        path: ./bin/*.apk
