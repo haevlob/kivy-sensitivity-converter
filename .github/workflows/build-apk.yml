@@ -1,4 +1,4 @@
-name: Build Android APK
+name: Build Kivy APK
 
 on:
   push:
@@ -9,21 +9,36 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04   # или ubuntu-latest
+    runs-on: ubuntu-22.04   # или ubuntu-24.04 — оба работают в 2026
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Build APK with Buildozer
-      uses: Brouilles/buildozer-action@v1
-      with:
-        command: buildozer android debug
-        workdir: .
-        # buildozer_version: master   # если хочешь самую свежую версию buildozer
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'   # 3.10–3.12 все ок
 
-    - name: Upload built APK
-      uses: actions/upload-artifact@v4
-      with:
-        name: app-debug.apk
-        path: bin/*.apk
+      - name: Cache Buildozer downloads (ускоряет повторные сборки)
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.buildozer
+            .buildozer
+          key: buildozer-${{ runner.os }}-${{ hashFiles('buildozer.spec') }}
+          restore-keys: |
+            buildozer-${{ runner.os }}-
+
+      - name: Install dependencies & build APK
+        run: |
+          pip install --upgrade buildozer cython==0.29.37
+          buildozer android clean   # ← опционально: только при проблемах
+          buildozer android debug
+
+      - name: Upload built APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: SensitivityConverter-debug.apk
+          path: bin/*.apk
+          if-no-files-found: error
