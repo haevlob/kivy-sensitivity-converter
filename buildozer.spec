@@ -30,7 +30,7 @@ android.accept_sdk_license = True
 
 android.build_tools_version = 33.0.0
 
-android.ndk = 23b  # Самая стабильная версия NDK для p4a
+android.ndk = 25b
 
 android.bootstrap = sdl2
 
@@ -38,7 +38,8 @@ p4a.branch = master
 
 p4a.fork = kivy
 
-android.extra_compile_args = -Wno-error -Wno-implicit-function-declaration -Wno-incompatible-pointer-types -Wno-int-to-pointer-cast -Wno-unused-variable -Wno-unused-but-set-variable
+# Самые важные строки — подавляем ошибки компиляции
+android.extra_compile_args = -Wno-implicit-function-declaration -Wno-error=implicit-function-declaration -Wno-incompatible-function-pointer-types -Wno-int-to-void-pointer-cast -Wno-error -Wno-unused-variable -Wno-unused-but-set-variable
 
 [buildozer]
 
