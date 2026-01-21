@@ -12,7 +12,7 @@ source.include_exts = py,png,jpg,kv,atlas
 
 version = 0.1
 
-requirements = hostpython3,python3,kivy  # Добавлен hostpython3 для фикса compilation
+requirements = python3,kivy
 
 icon.filename = %(source.dir)s/data/icon.png
 
@@ -34,13 +34,13 @@ android.ndk = 25b
 
 android.bootstrap = sdl2
 
-p4a.branch = develop  # Изменено на develop для фикса bugs
+p4a.branch = master
 
 p4a.fork = kivy
 
 android.extra_compile_args = -Wno-implicit-function-declaration -Wno-error=implicit-function-declaration -Wno-incompatible-function-pointer-types -Wno-int-to-void-pointer-cast -Wno-error
 
-android.extra_cflags = -Wno-implicit-function-declaration -Wno-error=implicit-function-declaration
+android.allow_unsafe_python = True  # Разрешаем старый Python без строгих проверок
 
 [buildozer]
 
