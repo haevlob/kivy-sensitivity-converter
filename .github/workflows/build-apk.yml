@@ -1,31 +1,50 @@
-name: Build Kivy APK (Docker)
+name: Build Android APK
 
 on:
-  push:
-    branches: [ main, master ]
-  workflow_dispatch:
+  release:
+    types: [published]
+  workflow_dispatch:  # Чтобы можно было запустить вручную
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
-
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Build with official Buildozer Docker
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install Buildozer dependencies
         run: |
-          docker pull kivy/buildozer:ubuntu-20.04
-          docker run --rm \
-            -v "$(pwd)":/home/user/hostcwd \
-            kivy/buildozer:ubuntu-20.04 \
-            /bin/bash -c "
-              sudo chown -R user:user /home/user/hostcwd &&
-              pip install --user --upgrade cython==0.29.37 virtualenv &&
-              buildozer android debug
-            "
+          sudo apt update
+          sudo apt install -y \
+            git zip unzip openjdk-17-jdk \
+            python3-pip autoconf libtool pkg-config \
+            zlib1g-dev libncurses5-dev libncursesw5-dev \
+            libtinfo5 cmake libffi-dev libssl-dev
 
-      - name: Upload APK
+      - name: Install Buildozer
+        run: |
+          pip install --user buildozer==1.5.0 cython==0.29.33
+
+      - name: Add Buildozer to PATH
+        run: echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Build APK (debug)
+        run: |
+          buildozer -v android debug
+
+      - name: Upload APK as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: app-debug.apk
+          name: SensitivityConverter-APK
           path: bin/*.apk
+
+      - name: Upload APK to release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: bin/*.apk
