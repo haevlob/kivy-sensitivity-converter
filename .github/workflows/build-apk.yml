@@ -5,39 +5,25 @@ on:
     branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
-  workflow_dispatch:          # можно запускать вручную
+  workflow_dispatch:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04     # или ubuntu-24.04 — оба работают
+    runs-on: ubuntu-22.04   # или ubuntu-latest
 
     steps:
-    - name: Checkout repository
+    - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'    # 3.10, 3.11, 3.12 — все подходят
-
-    - name: Cache Buildozer & NDK/SDK
-      uses: actions/cache@v4
-      with:
-        path: |
-          .buildozer
-          ~/.buildozer
-        key: buildozer-${{ hashFiles('buildozer.spec') }}
-
     - name: Build APK with Buildozer
-      uses: ArtemSBulgakov/buildozer-action@v1
-      id: buildozer
+      uses: Brouilles/buildozer-action@v1
       with:
-        # command: buildozer android clean   # можно раскомментировать для очистки
         command: buildozer android debug
         workdir: .
+        # buildozer_version: master   # если хочешь самую свежую версию buildozer
 
-    - name: Upload APK
+    - name: Upload built APK
       uses: actions/upload-artifact@v4
       with:
         name: app-debug.apk
-        path: ${{ steps.buildozer.outputs.filename }}
+        path: bin/*.apk
