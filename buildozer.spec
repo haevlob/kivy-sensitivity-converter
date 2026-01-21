@@ -1,53 +1,28 @@
 [app]
 
-# Название приложения
 title = Sensitivity Converter
 
-# Пакет
-package.name = sensconverter
-package.domain = org.dimonsensitive
+package.name = sensitivityconverter
 
-# Версия
-version = 0.1
+package.domain = com.devon
 
-# Требуемые модули
-requirements = python3,kivy==2.2.1,pyjnius,android
+version = 1.0
 
-# Исходники
 source.dir = .
-source.include_exts = py,png,jpg,kv,atlas,txt
+source.include_exts = py,png,jpg,kv,atlas
 
-# Иконка и прессплеш (если добавишь файлы — укажи пути)
-# app_icon = icon.png
-# presplash = presplash.jpg
+requirements = python3,kivy==2.3.0
 
-# Ориентация (портретная — стандарт для таких утилит)
 orientation = portrait
 
-# Полноэкранный режим
-fullscreen = 1
-
-# Логи Buildozer
-log_level = 2
-
-# Android
-[buildozer]
-
-# Архитектуры (оба, чтобы покрыть все устройства)
-android.archs = arm64-v8a, armeabi-v7a
-
-# API и минимальная версия Android
 android.api = 33
 android.minapi = 21
-android.sdk = 33
+android.sdk = 20
 android.ndk = 25b
 
-# Разрешения (интернет не нужен, но если вдруг захочешь добавить рекламу/обновления)
-android.permissions = INTERNET
+android.release = False
 
-# NDK и SDK пути (Buildozer сам скачает, но можно указать)
-# android.ndk_path =
-# android.sdk_path =
+[buildozer]
 
-# Релизный режим (для debug оставь p4a.branch = develop)
-p4a.branch = master
+log_level = 2
+warn_on_root = 1
