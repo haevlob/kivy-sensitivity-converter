@@ -1,30 +1,53 @@
 [app]
+
+# Название приложения
 title = Sensitivity Converter
+
+# Пакет
 package.name = sensconverter
-package.domain = com.devonmobile
+package.domain = org.dimonsensitive
 
+# Версия
+version = 0.1
+
+# Требуемые модули
+requirements = python3,kivy==2.2.1,pyjnius,android
+
+# Исходники
 source.dir = .
-source.include_exts = py,png,jpg,kv,atlas,ttf
+source.include_exts = py,png,jpg,kv,atlas,txt
 
-requirements =
-    python3
-    kivy==2.3.0             # или kivy==2.4.0 если хочешь самую свежую
-    cython==0.29.37         # очень важно — новые версии часто ломают
-    pillow                  # если используешь изображения
+# Иконка и прессплеш (если добавишь файлы — укажи пути)
+# app_icon = icon.png
+# presplash = presplash.jpg
 
+# Ориентация (портретная — стандарт для таких утилит)
 orientation = portrait
+
+# Полноэкранный режим
 fullscreen = 1
 
-android.permissions =
-
-# Версии Android (актуально на 2026)
-android.api = 34
-android.minapi = 24
-android.ndk = 25b
-android.archs = arm64-v8a, armeabi-v7a   # или только arm64-v8a, если не нужна поддержка старых
-
-p4a.bootstrap = sdl2
-p4a.local_recipes =
-
+# Логи Buildozer
 log_level = 2
-warn_on_root = 1
+
+# Android
+[buildozer]
+
+# Архитектуры (оба, чтобы покрыть все устройства)
+android.archs = arm64-v8a, armeabi-v7a
+
+# API и минимальная версия Android
+android.api = 33
+android.minapi = 21
+android.sdk = 33
+android.ndk = 25b
+
+# Разрешения (интернет не нужен, но если вдруг захочешь добавить рекламу/обновления)
+android.permissions = INTERNET
+
+# NDK и SDK пути (Buildozer сам скачает, но можно указать)
+# android.ndk_path =
+# android.sdk_path =
+
+# Релизный режим (для debug оставь p4a.branch = develop)
+p4a.branch = master
