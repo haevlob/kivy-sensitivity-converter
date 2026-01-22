@@ -20,10 +20,56 @@ from kivy.uix.widget import Widget
 from kivy.graphics import Color, Rectangle
 
 class Blocker(Widget):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.app = App.get_running_app()
+        self.touch_start_x = None
+        self.touch_start_y = None
+        self.is_swiping = False
+
     def on_touch_down(self, touch):
         if self.collide_point(*touch.pos):
+            self.touch_start_x = touch.x
+            self.touch_start_y = touch.y
+            touch.grab(self)
             return True
-        return super(Blocker, self).on_touch_down(touch)
+        return super().on_touch_down(touch)
+
+    def on_touch_move(self, touch):
+        if touch.grab_current == self:
+            delta_x = touch.x - self.touch_start_x
+            delta_y = touch.y - self.touch_start_y
+            if abs(delta_x) > abs(delta_y) and abs(delta_x) > dp(10):
+                self.is_swiping = True
+                new_x = min(0, max(-self.app.menu.width, delta_x))
+                self.app.menu.x = new_x
+                return True
+        return super().on_touch_move(touch)
+
+    def on_touch_up(self, touch):
+        if touch.grab_current == self:
+            touch.ungrab(self)
+            if self.is_swiping:
+                self.is_swiping = False
+                if self.app.menu.x < -self.app.menu.width / 2:
+                    anim = Animation(x=-self.app.menu.width, d=0.2)
+                    anim.start(self.app.menu)
+                    self.app.root.remove_widget(self)
+                    del self.app.blocker
+                    self.app.menu_btn.text = '☰'
+                else:
+                    anim = Animation(x=0, d=0.2)
+                    anim.start(self.app.menu)
+                return True
+            else:
+                # Close menu on tap outside
+                anim = Animation(x=-self.app.menu.width, d=0.2)
+                anim.start(self.app.menu)
+                self.app.root.remove_widget(self)
+                del self.app.blocker
+                self.app.menu_btn.text = '☰'
+                return True
+        return super().on_touch_up(touch)
 
 class Menu(BoxLayout):
     def __init__(self, **kwargs):
@@ -1006,10 +1052,56 @@ class SensitivityConverter(BoxLayout):
                 return round(value, 2) if is_standoff_output else int(round(value))
         return inputs[-1]
 
+class RootLayout(FloatLayout):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.app = App.get_running_app()
+        self.touch_start_x = None
+        self.touch_start_y = None
+        self.is_swiping = False
+
+    def on_touch_down(self, touch):
+        if self.app.menu.x < 0:  # menu closed
+            if touch.x < dp(30):  # near left edge
+                self.touch_start_x = touch.x
+                self.touch_start_y = touch.y
+                touch.grab(self)
+                return True
+        return super().on_touch_down(touch)
+
+    def on_touch_move(self, touch):
+        if touch.grab_current == self:
+            delta_x = touch.x - self.touch_start_x
+            delta_y = touch.y - self.touch_start_y
+            if abs(delta_x) > abs(delta_y) and abs(delta_x) > dp(10):
+                self.is_swiping = True
+                new_x = max(-self.app.menu.width, min(0, delta_x))
+                self.app.menu.x = new_x
+                return True
+        return super().on_touch_move(touch)
+
+    def on_touch_up(self, touch):
+        if touch.grab_current == self:
+            touch.ungrab(self)
+            if self.is_swiping:
+                self.is_swiping = False
+                if self.app.menu.x > -self.app.menu.width / 2:
+                    anim = Animation(x=0, d=0.2)
+                    anim.start(self.app.menu)
+                    self.app.blocker = Blocker(pos=(self.app.menu.width, 0), size=(Window.width - self.app.menu.width, Window.height))
+                    self.add_widget(self.app.blocker, index=1)
+                    self.app.menu_btn.text = 'X'
+                else:
+                    anim = Animation(x=-self.app.menu.width, d=0.2)
+                    anim.start(self.app.menu)
+                    self.app.menu_btn.text = '☰'
+                return True
+        return super().on_touch_up(touch)
+
 class ConverterApp(App):
     def build(self):
         Window.fullscreen = 'auto'
-        root = FloatLayout()
+        root = RootLayout()
         self.converter = SensitivityConverter(size_hint=(1, 1), pos=(0, 0))
         root.add_widget(self.converter)
         self.menu = Menu(orientation='vertical', size_hint=(None, None), size=(dp(250), Window.height), pos=(-dp(250), 0))
@@ -1056,17 +1148,18 @@ class ConverterApp(App):
         self.lang_label.text = self.converter.get_text('language')
 
     def toggle_menu(self, *args):
-        root = self.root
         if self.menu.x < 0:
-            Animation(x=0, d=0.2).start(self.menu)
+            anim = Animation(x=0, d=0.2)
+            anim.start(self.menu)
             self.blocker = Blocker(pos=(dp(250), 0), size=(Window.width - dp(250), Window.height))
-            root.add_widget(self.blocker, index=1)
+            self.root.add_widget(self.blocker, index=1)
             self.menu_btn.text = 'X'
         else:
-            Animation(x=-dp(250), d=0.2).start(self.menu)
-            root.remove_widget(self.blocker)
+            anim = Animation(x=-dp(250), d=0.2)
+            anim.start(self.menu)
+            self.root.remove_widget(self.blocker)
             del self.blocker
-            self.menu_btn.text = '☰'
+            self.menu_btn.text = '@'
 
 if __name__ == '__main__':
     ConverterApp().run()
