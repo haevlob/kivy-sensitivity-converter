@@ -261,14 +261,14 @@ class SensitivityConverter(BoxLayout):
     def setup_conversion_data(self):
         # Таблица для сенсы между Standoff 2 и PUBG
         self.standoff_pubg_sens = {
-            "general_3p": {0.0: 0, 0.5: 12, 1.0: 12, 2.0: 50, 3.0: 75, 4.0: 100, 5.0: 125, 10.0: 250, 96.0: 2343},
-            "general_1p": {0.0: 0, 0.5: 12, 1.0: 12, 2.0: 50, 3.0: 75, 4.0: 100, 5.0: 125, 10.0: 250, 96.0: 2343},
-            "col": {0.0: 0, 0.5: 8, 1.0: 6, 2.0: 32, 3.0: 48, 4.0: 64, 5.0: 82, 10.0: 153, 96.0: 1537},
-            "2x": {0.0: 0, 0.5: 6, 1.0: 13, 2.0: 26, 3.0: 39, 4.0: 52, 5.0: 65, 10.0: 123, 96.0: 1218},
-            "3x": {0.0: 0, 0.5: 4, 1.0: 8, 2.0: 15, 3.0: 23, 4.0: 31, 5.0: 39, 10.0: 74, 96.0: 731},
-            "4x": {0.0: 0, 0.5: 3, 1.0: 6, 2.0: 12, 3.0: 18, 4.0: 24, 5.0: 29, 10.0: 55, 96.0: 543},
-            "6x": {0.0: 0, 0.5: 2, 1.0: 4, 2.0: 7, 3.0: 11, 4.0: 15, 5.0: 19, 10.0: 37, 96.0: 356},
-            "8x": {0.0: 0, 0.5: 1, 1.0: 3, 2.0: 6, 3.0: 10, 4.0: 13, 5.0: 16, 10.0: 31, 96.0: 300}
+            "general_3p": {0.0: 0, 1.0: 12, 2.0: 50, 3.0: 75, 4.0: 100, 6.0: 150, 10.0: 250, 96.0: 2343},
+            "general_1p": {0.0: 0, 1.0: 12, 2.0: 50, 3.0: 75, 4.0: 100, 6.0: 150, 10.0: 250, 96.0: 2343},
+            "col": {0.0: 0, 1.0: 16, 2.0: 32, 3.0: 48, 4.0: 64, 6.0: 96, 10.0: 153, 96.0: 1537},
+            "2x": {0.0: 0, 1.0: 13, 2.0: 26, 3.0: 39, 4.0: 52, 6.0: 77, 10.0: 123, 96.0: 1218},
+            "3x": {0.0: 0, 1.0: 8, 2.0: 15, 3.0: 23, 4.0: 31, 6.0: 46, 10.0: 74, 96.0: 731},
+            "4x": {0.0: 0, 1.0: 6, 2.0: 12, 3.0: 18, 4.0: 24, 6.0: 34, 10.0: 55, 96.0: 543},
+            "6x": {0.0: 0, 1.0: 4, 2.0: 7, 3.0: 11, 4.0: 15, 6.0: 23, 10.0: 37, 96.0: 356},
+            "8x": {0.0: 0, 1.0: 3, 2.0: 6, 3.0: 10, 4.0: 13, 6.0: 19, 10.0: 31, 96.0: 300}
         }
         # Таблица для гироскопа между Standoff 2 и PUBG
         self.standoff_pubg_gyro = {
@@ -283,15 +283,15 @@ class SensitivityConverter(BoxLayout):
         }
         # Таблица для сенсы между Standoff 2 и CoD
         self.standoff_cod_sens = {
-            "general_3p": {0.0: 0, 0.5: 9, 1.0: 18, 2.0: 36, 3.0: 53, 4.0: 71, 5.0: 106, 10.0: 278, 21.0: 594},
-            "general_1p": {0.0: 0, 0.5: 9, 1.0: 18, 2.0: 36, 3.0: 53, 4.0: 71, 5.0: 106, 10.0: 278, 21.0: 594},
-            "col": {0.0: 0, 0.5: 28, 1.0: 56, 2.0: 110, 3.0: 165, 4.0: 220, 5.0: 330, 10.0: 880, 21.0: 1883},
-            "2x": {0.0: 0, 0.5: 36, 1.0: 73, 2.0: 143, 3.0: 215, 4.0: 287, 5.0: 431, 10.0: 1151, 21.0: 2463},
-            "3x": {0.0: 0, 0.5: 20, 1.0: 39, 2.0: 78, 3.0: 117, 4.0: 156, 5.0: 195, 10.0: 390, 21.0: 834},
-            "4x": {0.0: 0, 0.5: 14, 1.0: 30, 2.0: 59, 3.0: 89, 4.0: 119, 5.0: 149, 10.0: 297, 21.0: 635},
-            "6x": {0.0: 0, 0.5: 10, 1.0: 20, 2.0: 40, 3.0: 60, 4.0: 80, 5.0: 100, 10.0: 200, 21.0: 428},
-            "6x_sniper": {0.0: 0, 0.5: 11, 1.0: 23, 2.0: 43, 3.0: 65, 4.0: 86, 5.0: 108, 10.0: 216, 21.0: 463},
-            "8x": {0.0: 0, 0.5: 7, 1.0: 14, 2.0: 28, 3.0: 42, 4.0: 56, 5.0: 70, 10.0: 140, 21.0: 300}
+            "general_3p": {0.0: 0, 1.0: 39, 2.0: 79, 3.0: 117, 4.0: 156, 6.0: 232, 10.0: 384, 96.0: 3652},
+            "general_1p": {0.0: 0, 1.0: 39, 2.0: 79, 3.0: 117, 4.0: 156, 6.0: 232, 10.0: 384, 96.0: 3652},
+            "col": {0.0: 0, 1.0: 97, 2.0: 193, 3.0: 293, 4.0: 397, 6.0: 617, 10.0: 1105, 96.0: 11596},
+            "2x": {0.0: 0, 1.0: 132, 2.0: 263, 3.0: 394, 4.0: 525, 6.0: 787, 10.0: 1311, 96.0: 12577},
+            "3x": {0.0: 0, 1.0: 76, 2.0: 153, 3.0: 233, 4.0: 316, 6.0: 491, 10.0: 877, 96.0: 9176},
+            "4x": {0.0: 0, 1.0: 43, 2.0: 86, 3.0: 131, 4.0: 173, 6.0: 256, 10.0: 392, 96.0: 3316},
+            "6x": {0.0: 0, 1.0: 36, 2.0: 72, 3.0: 111, 4.0: 146, 6.0: 216, 10.0: 323, 96.0: 2624},
+            "6x_sniper": {0.0: 0, 1.0: 41, 2.0: 83, 3.0: 126, 4.0: 167, 6.0: 247, 10.0: 380, 96.0: 3240},
+            "8x": {0.0: 0, 1.0: 29, 2.0: 58, 3.0: 91, 4.0: 119, 6.0: 176, 10.0: 254, 96.0: 1931}
         }
         # Таблица для гироскопа между Standoff 2 и CoD
         self.standoff_cod_gyro = {
@@ -305,18 +305,19 @@ class SensitivityConverter(BoxLayout):
             "6x_sniper": {0.0: 0, 0.6: 8, 2.4: 34, 32.7: 464},
             "8x": {0.0: 0, 0.6: 5, 2.4: 22, 32.7: 300}
         }
+
         # Таблица для сенсы между PUBG и CoD
         self.pubg_cod_sens = {
-            "general_3p": {0: 0, 12: 9, 25: 18, 50: 36, 75: 53, 100: 71, 125: 106, 150: 142, 200: 213, 250: 278, 300: 320, 2250: 2400},
-            "general_1p": {0: 0, 12: 9, 25: 18, 50: 36, 75: 53, 100: 71, 125: 106, 150: 142, 200: 213, 250: 278, 300: 320, 2250: 2400},
-            "col": {0: 0, 8: 28, 17: 56, 34: 110, 51: 165, 68: 220, 85: 330, 102: 440, 136: 660, 170: 880, 204: 1056, 1530: 7920},
-            "2x": {0: 0, 7: 36, 14: 73, 28: 143, 42: 215, 56: 287, 70: 431, 84: 575, 112: 863, 140: 1151, 168: 1381, 1260: 10357},
-            "3x": {0: 0, 4: 20, 8: 39, 16: 78, 24: 117, 32: 156, 40: 234, 48: 312, 64: 468, 80: 585, 96: 702, 720: 5265},
-            "4x": {0: 0, 3: 14, 6: 30, 13: 59, 19: 89, 26: 119, 32: 149, 38: 178, 51: 238, 64: 297, 77: 357, 577: 2677},
-            "6x": {0: 0, 2: 10, 4: 20, 8: 40, 11: 60, 15: 80, 19: 100, 23: 120, 30: 160, 38: 200, 46: 240, 345: 1942},
-            "8x": {0: 0, 2: 7, 3: 14, 7: 28, 10: 42, 13: 56, 17: 70, 20: 84, 26: 112, 33: 140, 40: 168, 300: 1260},
-            "6x_sniper": {0: 0, 2: 11, 4: 23, 8: 43, 11: 65, 15: 86, 19: 108, 23: 129, 30: 172, 38: 216, 46: 259, 345: 1942}
-        }
+    "general_3p": {0: 0, 12: 39, 50: 79, 75: 117, 100: 156, 150: 232, 250: 384, 2343: 3652},
+    "general_1p": {0: 0, 12: 39, 50: 79, 75: 117, 100: 156, 150: 232, 250: 384, 2343: 3652},
+    "col": {0: 0, 16: 97, 32: 193, 48: 293, 64: 397, 96: 617, 153: 1105, 1537: 11596},
+    "2x": {0: 0, 13: 132, 26: 263, 39: 394, 52: 525, 77: 787, 123: 1311, 1218: 12577},
+    "3x": {0: 0, 8: 76, 15: 153, 23: 233, 31: 316, 46: 491, 74: 877, 731: 9176},
+    "4x": {0: 0, 6: 43, 12: 86, 18: 131, 24: 173, 34: 256, 55: 392, 543: 3316},
+    "6x": {0: 0, 4: 36, 7: 72, 11: 111, 15: 146, 23: 216, 37: 323, 356: 2624},
+    "8x": {0: 0, 3: 29, 6: 58, 10: 91, 13: 119, 19: 176, 31: 254, 300: 1931},
+    "6x_sniper": {0: 0, 4: 41, 7: 83, 11: 126, 15: 167, 23: 247, 37: 380, 356: 3240}
+}
         # Таблица для гироскопа между PUBG и CoD
         self.pubg_cod_gyro = {
             "general_3p": {0: 0, 400: 126, 5456: 1719},
@@ -365,12 +366,12 @@ class SensitivityConverter(BoxLayout):
         )
         self.right_spinner.bind(text=lambda instance, value: self.on_right_game_change(value))
         right_game_frame.add_widget(self.right_spinner)
-        accel_frame = BoxLayout(orientation='vertical', size_hint_y=None, height=dp(60))
-        self.add_widget(accel_frame)
+        self.accel_frame = BoxLayout(orientation='vertical', size_hint_y=None, height=dp(60))
+        self.add_widget(self.accel_frame)
         self.accel_title = Label(text=self.get_text("accel_title"), size_hint_y=None, height=dp(30))
-        accel_frame.add_widget(self.accel_title)
+        self.accel_frame.add_widget(self.accel_title)
         self.accel_inner_frame = BoxLayout(orientation='horizontal')
-        accel_frame.add_widget(self.accel_inner_frame)
+        self.accel_frame.add_widget(self.accel_inner_frame)
         settings_frame = BoxLayout(orientation='vertical', size_hint_y=None, height=dp(120))
         self.add_widget(settings_frame)
         mode_frame = BoxLayout(orientation='horizontal', size_hint_y=None, height=dp(60))
@@ -447,7 +448,11 @@ class SensitivityConverter(BoxLayout):
         self.table_frame.clear_widgets()
         self.entry_widgets = []
         self.left_widgets = []
-        self.setup_acceleration_ui()
+        if self.left_game == self.right_game:
+            self.accel_frame.height = 0
+        else:
+            self.accel_frame.height = dp(60)
+            self.setup_acceleration_ui()
         self.setup_conversion_table()
 
     def setup_acceleration_ui(self):
@@ -527,6 +532,7 @@ class SensitivityConverter(BoxLayout):
         self.other_accel_input.readonly = value
         self.other_accel_input.background_color = [0.8, 0.8, 0.8, 1] if value else [1, 1, 1, 1]
         self.other_accel_input.foreground_color = [0, 0, 0, 1]
+        self.update_accel_inputs()
 
     def on_standoff_accel_text(self, instance, value):
         if value == '':
@@ -744,13 +750,8 @@ class SensitivityConverter(BoxLayout):
         right_game = self.right_game
         sensor = self.sensor_type
         if left_game == "pubg" and right_game == "cod" and key == "general_3p":
-            pubg_indices = {
-                "general_1p": 1, "col": 2, "2x": 3, "3x": 4, "4x": 5, "6x": 6, "8x": 7
-            }
-            cod_indices = {
-                "general_3p": 8, "general_1p": 9, "col": 10, "2x": 11, "3x": 12, "4x": 13,
-                "6x": 14, "8x": 15, "6x_sniper": 16
-            }
+            pubg_keys = {"general_1p", "col", "2x", "3x", "4x", "6x", "8x"}
+            cod_keys = {"general_3p", "general_1p", "col", "2x", "3x", "4x", "6x", "8x", "6x_sniper"}
             source_data = self.pubg_cod_sens if sensor == "sensitivity" else self.pubg_cod_gyro
             values = list(source_data["general_3p"].keys())
             if left_value <= values[0]:
@@ -766,24 +767,20 @@ class SensitivityConverter(BoxLayout):
                         ratio = (left_value - values[j]) / (values[j+1] - values[j])
                         break
             for lw, k, _ in self.left_widgets:
-                if k in pubg_indices:
+                if k in pubg_keys:
                     lower = list(source_data[k].keys())[row_index]
                     upper = list(source_data[k].keys())[row_index + 1]
                     val = lower + ratio * (upper - lower)
                     lw.text = str(int(round(val)))
             for _, ri, k, _, _ in self.entry_widgets:
-                if k in cod_indices:
+                if k in cod_keys:
                     lower = source_data[k][list(source_data[k].keys())[row_index]]
                     upper = source_data[k][list(source_data[k].keys())[row_index + 1]]
                     val = lower + ratio * (upper - lower)
                     ri.text = str(int(round(val)))
         elif left_game == "cod" and right_game == "pubg" and key == "general_3p":
-            pubg_indices = {
-                "general_3p": 0, "general_1p": 1, "col": 2, "2x": 3, "3x": 4, "4x": 5, "6x": 6, "8x": 7
-            }
-            cod_indices = {
-                "general_1p": 9, "col": 10, "2x": 11, "3x": 12, "4x": 13, "6x": 14, "8x": 15, "6x_sniper": 16
-            }
+            pubg_keys = {"general_3p", "general_1p", "col", "2x", "3x", "4x", "6x", "8x"}
+            cod_keys = {"general_1p", "col", "2x", "3x", "4x", "6x", "8x", "6x_sniper"}
             source_data = self.pubg_cod_sens if sensor == "sensitivity" else self.pubg_cod_gyro
             values = list(source_data["general_3p"].values())
             if left_value <= values[0]:
@@ -799,13 +796,13 @@ class SensitivityConverter(BoxLayout):
                         ratio = (left_value - values[j]) / (values[j+1] - values[j])
                         break
             for lw, k, _ in self.left_widgets:
-                if k in cod_indices:
+                if k in cod_keys:
                     lower = list(source_data[k].values())[row_index]
                     upper = list(source_data[k].values())[row_index + 1]
                     val = lower + ratio * (upper - lower)
                     lw.text = str(int(round(val)))
             for _, ri, k, _, _ in self.entry_widgets:
-                if k in pubg_indices:
+                if k in pubg_keys:
                     lower = list(source_data[k].keys())[row_index]
                     upper = list(source_data[k].keys())[row_index + 1]
                     val = lower + ratio * (upper - lower)
@@ -1020,6 +1017,8 @@ class SensitivityConverter(BoxLayout):
         keys = sorted(table.keys())
         if not keys:
             return 0
+        min_val, max_val = keys[0], keys[-1]
+        input_val = max(min_val, min(input_val, max_val))  # Clamp input
         if input_val <= keys[0]:
             return table[keys[0]]
         if input_val >= keys[-1]:
@@ -1038,6 +1037,8 @@ class SensitivityConverter(BoxLayout):
         items = sorted(table.items())
         inputs = [k for k, v in items]
         outputs = [v for k, v in items]
+        min_val, max_val = outputs[0], outputs[-1]
+        input_val = max(min_val, min(input_val, max_val))  # Clamp input
         if input_val <= outputs[0]:
             return inputs[0]
         if input_val >= outputs[-1]:
@@ -1159,7 +1160,7 @@ class ConverterApp(App):
             anim.start(self.menu)
             self.root.remove_widget(self.blocker)
             del self.blocker
-            self.menu_btn.text = '@'
+            self.menu_btn.text = ' '
 
 if __name__ == '__main__':
     ConverterApp().run()
