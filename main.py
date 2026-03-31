@@ -18,6 +18,7 @@ from kivy.animation import Animation
 from kivy.uix.accordion import Accordion, AccordionItem
 from kivy.uix.widget import Widget
 from kivy.graphics import Color, Rectangle
+import webbrowser
 
 class Blocker(Widget):
     def __init__(self, **kwargs):
@@ -222,7 +223,7 @@ class SensitivityConverter(BoxLayout):
             'sniper': {
                 'ru': 'Снайперский',
                 'en': 'Sniper',
-                'es': 'Mira de precisión',
+                'es': 'Mira de précision',
                 'pt': 'Escopo do fuzil'
             },
             'settings': {
@@ -242,6 +243,72 @@ class SensitivityConverter(BoxLayout):
                 'en': 'Menu',
                 'es': 'Menú',
                 'pt': 'Menu'
+            },
+            # === Переводы для раздела «О приложении» ===
+            'about_title': {
+                'ru': 'О приложении',
+                'en': 'About the App',
+                'es': 'Acerca de la aplicación',
+                'pt': 'Sobre o aplicativo'
+            },
+            'about_text': {
+                'ru': """Mobile Games Sens Converter
+Версия: 1.0
+Автор: Taysin Dim
+Удобный конвертер чувствительности и гироскопа
+для Standoff 2, PUBG Mobile и Call of Duty Mobile.
+• Точная конвертация сенсы и гироскопа
+• Автоматический и ручной режим
+• Поддержка ускорения (PUBG)
+• Работает полностью оффлайн
+• Без рекламы и платных функций
+© 2026 Taysin Dim. Все права защищены.""",
+                'en': """Mobile Games Sens Converter
+Version: 1.0
+Author: Taysin Dim
+Convenient sensitivity and gyroscope converter
+for Standoff 2, PUBG Mobile and Call of Duty Mobile.
+• Accurate sensitivity and gyroscope conversion
+• Automatic and manual mode
+• Acceleration support (PUBG)
+• Works completely offline
+• No ads or paid features
+© 2026 Taysin Dim. All rights reserved.""",
+                'es': """Mobile Games Sens Converter
+Versión: 1.0
+Autor: Taysin Dim
+Convertidor práctico de sensibilidad y giroscopio
+para Standoff 2, PUBG Mobile y Call of Duty Mobile.
+• Conversión precisa de sensibilidad y giroscopio
+• Modo automático y manual
+• Soporte de aceleración (PUBG)
+• Funciona completamente sin conexión
+• Sin anuncios ni funciones de pago
+© 2026 Taysin Dim. Todos los derechos reservados.""",
+                'pt': """Mobile Games Sens Converter
+Versão: 1.0
+Autor: Taysin Dim
+Conversor conveniente de sensibilidade e giroscópio
+para Standoff 2, PUBG Mobile e Call of Duty Mobile.
+• Conversão precisa de sensibilidade e giroscópio
+• Modo automático e manual
+• Suporte à aceleração (PUBG)
+• Funciona completamente offline
+• Sem anúncios ou recursos pagos
+© 2026 Taysin Dim. Todos os direitos reservados."""
+            },
+            'donate_button': {
+                'ru': 'Поддержать автора на Boosty',
+                'en': 'Support the author on Boosty',
+                'es': 'Apoyar al autor en Boosty',
+                'pt': 'Apoiar o autor no Boosty'
+            },
+            # === НОВАЯ КНОПКА НА ГЛАВНОМ ЭКРАНЕ ===
+            'author_page_button': {
+                'ru': 'Страница автора',
+                'en': 'Author\'s Page',
+                'es': 'Página del autor',
+                'pt': 'Página do autor'
             }
         }
         self.langs = {
@@ -401,6 +468,24 @@ class SensitivityConverter(BoxLayout):
         self.table_frame = GridLayout(cols=4, spacing=dp(5), size_hint_y=None, row_force_default=True, row_default_height=dp(40))
         self.table_frame.bind(minimum_height=self.table_frame.setter('height'))
         self.table_scroll.add_widget(self.table_frame)
+
+        # === НОВАЯ КНОПКА «СТРАНИЦА АВТОРА» ВНИЗУ СЛЕВА ПОД ТАБЛИЦЕЙ ===
+        self.footer = BoxLayout(orientation='horizontal', size_hint_y=None, height=dp(50), padding=[dp(10), dp(5), dp(10), dp(5)])
+        self.add_widget(self.footer)
+        self.author_page_btn = Button(
+            text=self.get_text('author_page_button'),
+            size_hint_x=None,
+            width=dp(220),
+            height=dp(40),
+            background_color=(0.2, 0.6, 1, 1),
+            color=(1, 1, 1, 1),
+            font_size=dp(14)
+        )
+        self.author_page_btn.bind(on_press=lambda *args: webbrowser.open('https://boosty.to/hevlob_so_2'))
+        self.footer.add_widget(self.author_page_btn)
+        # Пустой виджет чтобы кнопка была слева
+        self.footer.add_widget(Widget())
+
         self.update_ui()
 
     def on_lang_change(self, instance, value):
@@ -421,6 +506,7 @@ class SensitivityConverter(BoxLayout):
             btn.text = self.get_text(mode)
         for sensor, btn in self.sensor_buttons.items():
             btn.text = self.get_text('sens' if sensor == 'sensitivity' else 'gyro')
+        self.author_page_btn.text = self.get_text('author_page_button')
         self.update_ui()
 
     def on_left_game_change(self, value):
@@ -459,7 +545,7 @@ class SensitivityConverter(BoxLayout):
         left_game = self.left_game
         right_game = self.right_game
         if left_game == right_game:
-            return  # No acceleration setup needed if games are the same
+            return
         if 'pubg' in [left_game, right_game]:
             pubg_side = 'left' if left_game == 'pubg' else 'right'
             other_game = left_game if pubg_side == 'right' else right_game
@@ -498,7 +584,6 @@ class SensitivityConverter(BoxLayout):
                 self.bind(pubg_accel=self.update_other_input_state)
                 self.update_other_input_state(None, self.pubg_accel)
 
-            # Добавляем в правильном порядке (левый столбец → правый столбец)
             if pubg_side == 'left':
                 self.accel_inner_frame.add_widget(Label(text="PUBG", size_hint_x=None, width=dp(100)))
                 self.accel_inner_frame.add_widget(cb)
@@ -540,7 +625,7 @@ class SensitivityConverter(BoxLayout):
         else:
             try:
                 val = float(value)
-                self.standoff_accel = max(0.0, val)  # Prevent negative
+                self.standoff_accel = max(0.0, val)
             except ValueError:
                 self.standoff_accel = 0.0
                 instance.text = ''
@@ -557,7 +642,7 @@ class SensitivityConverter(BoxLayout):
         else:
             try:
                 val = int(value)
-                self.cod_accel = max(0, val)  # Prevent negative
+                self.cod_accel = max(0, val)
             except ValueError:
                 self.cod_accel = 0
                 instance.text = ''
@@ -590,7 +675,6 @@ class SensitivityConverter(BoxLayout):
         else:
             self.standoff_accel = 0.0
             self.cod_accel = 0
-            # Clear all table fields for consistency
             for _, right_input, _, _, _ in self.entry_widgets:
                 right_input.text = ''
             for left_input, _, _ in self.left_widgets:
@@ -1018,7 +1102,7 @@ class SensitivityConverter(BoxLayout):
         if not keys:
             return 0
         min_val, max_val = keys[0], keys[-1]
-        input_val = max(min_val, min(input_val, max_val))  # Clamp input
+        input_val = max(min_val, min(input_val, max_val))
         if input_val <= keys[0]:
             return table[keys[0]]
         if input_val >= keys[-1]:
@@ -1038,7 +1122,7 @@ class SensitivityConverter(BoxLayout):
         inputs = [k for k, v in items]
         outputs = [v for k, v in items]
         min_val, max_val = outputs[0], outputs[-1]
-        input_val = max(min_val, min(input_val, max_val))  # Clamp input
+        input_val = max(min_val, min(input_val, max_val))
         if input_val <= outputs[0]:
             return inputs[0]
         if input_val >= outputs[-1]:
@@ -1062,8 +1146,8 @@ class RootLayout(FloatLayout):
         self.is_swiping = False
 
     def on_touch_down(self, touch):
-        if self.app.menu.x < 0:  # menu closed
-            if touch.x < dp(30):  # near left edge
+        if self.app.menu.x < 0:
+            if touch.x < dp(30):
                 self.touch_start_x = touch.x
                 self.touch_start_y = touch.y
                 touch.grab(self)
@@ -1143,10 +1227,44 @@ class ConverterApp(App):
         self.lang_spinner.bind(text=self.converter.on_lang_change)
         inner.add_widget(self.lang_spinner)
 
+        # Раздел «О приложении» с переводом
+        self.about_item = AccordionItem(title=self.converter.get_text('about_title'))
+        self.acc.add_widget(self.about_item)
+        about_inner = BoxLayout(orientation='vertical', padding=dp(10), spacing=dp(5))
+        self.about_item.add_widget(about_inner)
+
+        self.about_label = Label(
+            text=self.converter.get_text('about_text'),
+            size_hint_y=None,
+            height=dp(280),
+            halign='left',
+            valign='top',
+            text_size=(dp(230), None),
+            font_size=dp(13),
+            markup=False
+        )
+        about_inner.add_widget(self.about_label)
+
+        # Кликабельная кнопка доната
+        self.donate_btn = Button(
+            text=self.converter.get_text('donate_button'),
+            size_hint_y=None,
+            height=dp(50),
+            background_color=(0.2, 0.6, 1, 1),
+            color=(1, 1, 1, 1),
+            font_size=dp(15)
+        )
+        self.donate_btn.bind(on_press=lambda *args: webbrowser.open('https://boosty.to/hevlob_so_2/donate'))
+        about_inner.add_widget(self.donate_btn)
+
     def update_menu_texts(self):
         self.menu_header.text = self.converter.get_text('menu')
         self.settings_item.title = self.converter.get_text('settings')
         self.lang_label.text = self.converter.get_text('language')
+        # Обновляем раздел «О приложении» при смене языка
+        self.about_item.title = self.converter.get_text('about_title')
+        self.about_label.text = self.converter.get_text('about_text')
+        self.donate_btn.text = self.converter.get_text('donate_button')
 
     def toggle_menu(self, *args):
         if self.menu.x < 0:
