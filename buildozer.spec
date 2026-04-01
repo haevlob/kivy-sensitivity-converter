@@ -1,9 +1,12 @@
 [app]
 
-title = Sensitivity Converter
+title = Mobile Games Sens Converter
 package.name = sensitivityconverter
-package.domain = com.devon
+package.domain = com.taysindim
 version = 1.0
+
+author = Taysin Dim
+author_email = haevlob@gmail.com
 
 source.dir = .
 source.include_exts = py,png,jpg,kv,atlas
