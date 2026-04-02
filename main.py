@@ -20,313 +20,274 @@ from kivy.uix.widget import Widget
 from kivy.graphics import Color, Rectangle
 import webbrowser
 
-class Blocker(Widget):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.app = App.get_running_app()
-        self.touch_start_x = None
-        self.touch_start_y = None
-        self.is_swiping = False
 
-    def on_touch_down(self, touch):
-        if self.collide_point(*touch.pos):
-            self.touch_start_x = touch.x
-            self.touch_start_y = touch.y
-            touch.grab(self)
-            return True
-        return super().on_touch_down(touch)
+# ====================== 1. КОНВЕРТАЦИЯ УСКОРЕНИЯ (полностью отдельный класс) ======================
+class AccelerationManager:
+    """Полностью изолированная логика конвертации ускорения.
+    Не знает ничего про sens/gyro, режимы прицеливания, auto/manual и таблицу."""
 
-    def on_touch_move(self, touch):
-        if touch.grab_current == self:
-            delta_x = touch.x - self.touch_start_x
-            delta_y = touch.y - self.touch_start_y
-            if abs(delta_x) > abs(delta_y) and abs(delta_x) > dp(10):
-                self.is_swiping = True
-                new_x = min(0, max(-self.app.menu.width, delta_x))
-                self.app.menu.x = new_x
-                return True
-        return super().on_touch_move(touch)
+    def __init__(self, get_text_func):
+        self.get_text = get_text_func
+        self.pubg_accel = BooleanProperty(False)
+        self.standoff_accel = NumericProperty(0.0)
+        self.cod_accel = NumericProperty(0)
+        self.standoff_cod_accel = {0: 0, 0.25: 300}
+        self.accel_inner_frame = None
+        self.pubg_checkbox = None
+        self.standoff_accel_input = None
+        self.cod_accel_input = None
+        self.other_accel_input = None
+        self.left_game = None
+        self.right_game = None
 
-    def on_touch_up(self, touch):
-        if touch.grab_current == self:
-            touch.ungrab(self)
-            if self.is_swiping:
-                self.is_swiping = False
-                if self.app.menu.x < -self.app.menu.width / 2:
-                    anim = Animation(x=-self.app.menu.width, d=0.2)
-                    anim.start(self.app.menu)
-                    self.app.root.remove_widget(self)
-                    del self.app.blocker
-                    self.app.menu_btn.text = '☰'
-                else:
-                    anim = Animation(x=0, d=0.2)
-                    anim.start(self.app.menu)
-                return True
+    def setup_ui(self, accel_frame):
+        """Создаёт UI ускорения."""
+        accel_frame.clear_widgets()
+        accel_title = Label(text=self.get_text("accel_title"), size_hint_y=None, height=dp(30))
+        accel_frame.add_widget(accel_title)
+        self.accel_inner_frame = BoxLayout(orientation='horizontal')
+        accel_frame.add_widget(self.accel_inner_frame)
+
+    def update_ui(self, left_game, right_game):
+        """Обновляет UI ускорения при смене игр."""
+        self.left_game = left_game
+        self.right_game = right_game
+        if not self.accel_inner_frame:
+            return
+        self.accel_inner_frame.clear_widgets()
+        if left_game == right_game:
+            return
+        if 'pubg' in [left_game, right_game]:
+            self._build_pubg_acceleration_ui(left_game, right_game)
+        elif left_game == 'standoff' and right_game == 'cod':
+            self._build_standoff_cod_ui()
+        elif left_game == 'cod' and right_game == 'standoff':
+            self._build_cod_standoff_ui()
+
+    def _build_pubg_acceleration_ui(self, left_game, right_game):
+        pubg_side = 'left' if left_game == 'pubg' else 'right'
+        other_game = left_game if pubg_side == 'right' else right_game
+        readonly = pubg_side == 'left'
+
+        cb = CheckBox(active=self.pubg_accel)
+        cb.bind(active=self._update_acceleration)
+        self.pubg_checkbox = cb
+
+        if other_game == 'standoff':
+            input_widget = TextInput(text='', multiline=False, input_filter='float',
+                                     height=dp(40), size_hint_y=None, padding=[dp(5), dp(5), dp(5), dp(5)], font_size=dp(14))
+            input_widget.readonly = readonly
+            if readonly:
+                input_widget.background_color = [0.8, 0.8, 0.8, 1]
+                input_widget.foreground_color = [0, 0, 0, 1]
+                input_widget.text = f"{self.standoff_accel:.2f}" if self.standoff_accel != 0.0 else ''
+            if not readonly:
+                input_widget.bind(text=self._on_standoff_accel_text)
+            self.standoff_accel_input = input_widget
+            other_label = "Standoff"
+        else:
+            input_widget = TextInput(text='', multiline=False, input_filter='int',
+                                     height=dp(40), size_hint_y=None, padding=[dp(5), dp(5), dp(5), dp(5)], font_size=dp(14))
+            input_widget.readonly = readonly
+            if readonly:
+                input_widget.background_color = [0.8, 0.8, 0.8, 1]
+                input_widget.foreground_color = [0, 0, 0, 1]
+                input_widget.text = str(self.cod_accel) if self.cod_accel != 0 else ''
+            if not readonly:
+                input_widget.bind(text=self._on_cod_accel_text)
+            self.cod_accel_input = input_widget
+            other_label = "CoD"
+
+        if pubg_side == 'right':
+            self.other_accel_input = input_widget
+            self._update_other_input_state(None, self.pubg_accel)
+        if pubg_side == 'left':
+            self.accel_inner_frame.add_widget(Label(text="PUBG", size_hint_x=None, width=dp(100)))
+            self.accel_inner_frame.add_widget(cb)
+            self.accel_inner_frame.add_widget(Label(text=other_label, size_hint_x=None, width=dp(100)))
+            self.accel_inner_frame.add_widget(input_widget)
+        else:
+            self.accel_inner_frame.add_widget(Label(text=other_label, size_hint_x=None, width=dp(100)))
+            self.accel_inner_frame.add_widget(input_widget)
+            self.accel_inner_frame.add_widget(Label(text="PUBG", size_hint_x=None, width=dp(100)))
+            self.accel_inner_frame.add_widget(cb)
+
+    def _build_standoff_cod_ui(self):
+        self.accel_inner_frame.add_widget(Label(text="Standoff", size_hint_x=None, width=dp(100)))
+        self.standoff_accel_input = TextInput(text='', multiline=False, input_filter='float',
+                                              height=dp(40), size_hint_y=None, padding=[dp(5), dp(5), dp(5), dp(5)], font_size=dp(14))
+        self.accel_inner_frame.add_widget(self.standoff_accel_input)
+        self.standoff_accel_input.bind(text=self._on_standoff_accel_text)
+        self.accel_inner_frame.add_widget(Label(text="CoD", size_hint_x=None, width=dp(100)))
+        self.cod_accel_input = TextInput(text='', multiline=False, readonly=True, input_filter='int',
+                                         height=dp(40), size_hint_y=None, padding=[dp(5), dp(5), dp(5), dp(5)], font_size=dp(14),
+                                         background_color=[0.8, 0.8, 0.8, 1], foreground_color=[0, 0, 0, 1])
+        self.accel_inner_frame.add_widget(self.cod_accel_input)
+        self.cod_accel_input.text = str(self.cod_accel) if self.cod_accel != 0 else ''
+
+    def _build_cod_standoff_ui(self):
+        self.accel_inner_frame.add_widget(Label(text="CoD", size_hint_x=None, width=dp(100)))
+        self.cod_accel_input = TextInput(text='', multiline=False, input_filter='int',
+                                         height=dp(40), size_hint_y=None, padding=[dp(5), dp(5), dp(5), dp(5)], font_size=dp(14))
+        self.accel_inner_frame.add_widget(self.cod_accel_input)
+        self.cod_accel_input.bind(text=self._on_cod_accel_text)
+        self.accel_inner_frame.add_widget(Label(text="Standoff", size_hint_x=None, width=dp(100)))
+        self.standoff_accel_input = TextInput(text='', multiline=False, readonly=True, input_filter='float',
+                                              height=dp(40), size_hint_y=None, padding=[dp(5), dp(5), dp(5), dp(5)], font_size=dp(14),
+                                              background_color=[0.8, 0.8, 0.8, 1], foreground_color=[0, 0, 0, 1])
+        self.accel_inner_frame.add_widget(self.standoff_accel_input)
+        self.standoff_accel_input.text = f"{self.standoff_accel:.2f}" if self.standoff_accel != 0.0 else ''
+
+    def _update_other_input_state(self, instance, value):
+        if self.other_accel_input:
+            self.other_accel_input.readonly = value
+            self.other_accel_input.background_color = [0.8, 0.8, 0.8, 1] if value else [1, 1, 1, 1]
+            self.other_accel_input.foreground_color = [0, 0, 0, 1]
+            self._update_accel_inputs()
+
+    def _on_standoff_accel_text(self, instance, value):
+        if value == '':
+            self.standoff_accel = 0.0
+        else:
+            try:
+                val = float(value)
+                self.standoff_accel = max(0.0, val)
+            except ValueError:
+                self.standoff_accel = 0.0
+                instance.text = ''
+        if self.pubg_checkbox:
+            self.pubg_checkbox.unbind(active=self._update_acceleration)
+            self.pubg_accel = abs(self.standoff_accel - 0.42) <= 0.01
+            self.pubg_checkbox.bind(active=self._update_acceleration)
+        self._update_standoff_cod_accel()
+        self._update_accel_inputs()
+
+    def _on_cod_accel_text(self, instance, value):
+        if value == '':
+            self.cod_accel = 0
+        else:
+            try:
+                val = int(value)
+                self.cod_accel = max(0, val)
+            except ValueError:
+                self.cod_accel = 0
+                instance.text = ''
+        if self.pubg_checkbox:
+            self.pubg_checkbox.unbind(active=self._update_acceleration)
+            self.pubg_accel = abs(self.cod_accel - 300) <= 1
+            self.pubg_checkbox.bind(active=self._update_acceleration)
+        self._update_standoff_cod_accel()
+        self._update_accel_inputs()
+
+    def _update_accel_inputs(self):
+        if self.standoff_accel_input and getattr(self.standoff_accel_input, 'readonly', False):
+            self.standoff_accel_input.text = f"{self.standoff_accel:.2f}" if self.standoff_accel != 0.0 else ''
+        if self.cod_accel_input and getattr(self.cod_accel_input, 'readonly', False):
+            self.cod_accel_input.text = str(self.cod_accel) if self.cod_accel != 0 else ''
+
+    def _update_acceleration(self, instance, active):
+        self.pubg_accel = active
+        if active:
+            if (self.left_game == 'pubg' and self.right_game == 'standoff') or \
+               (self.left_game == 'standoff' and self.right_game == 'pubg'):
+                self.standoff_accel = 0.42
+            elif (self.left_game == 'pubg' and self.right_game == 'cod') or \
+                 (self.left_game == 'cod' and self.right_game == 'pubg'):
+                self.cod_accel = 300
+        else:
+            self.standoff_accel = 0.0
+            self.cod_accel = 0
+        self._update_accel_inputs()
+
+    def _update_standoff_cod_accel(self):
+        if self.left_game == 'standoff' and self.right_game == 'cod':
+            standoff_val = self.standoff_accel
+            keys = sorted(self.standoff_cod_accel.keys())
+            if standoff_val <= keys[0]:
+                self.cod_accel = self.standoff_cod_accel[keys[0]]
+            elif standoff_val >= keys[-1]:
+                self.cod_accel = self.standoff_cod_accel[keys[-1]]
             else:
-                # Close menu on tap outside
-                anim = Animation(x=-self.app.menu.width, d=0.2)
-                anim.start(self.app.menu)
-                self.app.root.remove_widget(self)
-                del self.app.blocker
-                self.app.menu_btn.text = '☰'
-                return True
-        return super().on_touch_up(touch)
+                for i in range(len(keys) - 1):
+                    if keys[i] <= standoff_val <= keys[i + 1]:
+                        ratio = (standoff_val - keys[i]) / (keys[i + 1] - keys[i])
+                        cod_value = self.standoff_cod_accel[keys[i]] + ratio * (
+                                    self.standoff_cod_accel[keys[i + 1]] - self.standoff_cod_accel[keys[i]])
+                        self.cod_accel = int(round(cod_value))
+                        break
+        elif self.left_game == 'cod' and self.right_game == 'standoff':
+            cod_val = self.cod_accel
+            values = sorted(self.standoff_cod_accel.items(), key=lambda x: x[1])
+            if cod_val <= values[0][1]:
+                self.standoff_accel = values[0][0]
+            elif cod_val >= values[-1][1]:
+                self.standoff_accel = values[-1][0]
+            else:
+                for i in range(len(values) - 1):
+                    if values[i][1] <= cod_val <= values[i + 1][1]:
+                        ratio = (cod_val - values[i][1]) / (values[i + 1][1] - values[i][1])
+                        standoff_value = values[i][0] + ratio * (values[i + 1][0] - values[i][0])
+                        self.standoff_accel = round(standoff_value, 2)
+                        break
+        self._update_accel_inputs()
 
-class Menu(BoxLayout):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        with self.canvas.before:
-            Color(0.8, 0.8, 0.8, 1) # gray
-            self.rect = Rectangle(size=self.size, pos=self.pos)
-        self.bind(size=self._update_rect, pos=self._update_rect)
 
-    def _update_rect(self, instance, value):
-        self.rect.pos = instance.pos
-        self.rect.size = instance.size
-
-    def on_touch_down(self, touch):
-        if self.collide_point(*touch.pos):
-            for child in reversed(self.children):
-                if child.dispatch('on_touch_down', touch):
-                    return True
-            return True
-        return super(Menu, self).on_touch_down(touch)
-
+# ====================== 2. КОНВЕРТАЦИЯ РЕЖИМОВ ПРИЦЕЛИВАНИЯ ======================
 class SensitivityConverter(BoxLayout):
     orientation = 'vertical'
     left_game = StringProperty('standoff')
     right_game = StringProperty('cod')
     conversion_mode = StringProperty('auto')
     sensor_type = StringProperty('sensitivity')
-    pubg_accel = BooleanProperty(False)
-    standoff_accel = NumericProperty(0.0)
-    cod_accel = NumericProperty(0)
     language = StringProperty('ru')
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.translations = {
-            'from_game': {
-                'ru': 'Из игры',
-                'en': 'From game',
-                'es': 'De juego',
-                'pt': 'Do jogo'
-            },
-            'to_game': {
-                'ru': 'В игру',
-                'en': 'To game',
-                'es': 'A juego',
-                'pt': 'Para jogo'
-            },
-            'accel_title': {
-                'ru': 'Ускорение',
-                'en': 'Acceleration',
-                'es': 'Aceleración',
-                'pt': 'Aceleração'
-            },
-            'mode': {
-                'ru': 'Режим:',
-                'en': 'Mode:',
-                'es': 'Modo:',
-                'pt': 'Modo:'
-            },
-            'auto': {
-                'ru': 'Автоматически',
-                'en': 'Automatically',
-                'es': 'Automáticamente',
-                'pt': 'Automaticamente'
-            },
-            'manual': {
-                'ru': 'Вручную',
-                'en': 'Manually',
-                'es': 'Manualmente',
-                'pt': 'Manualmente'
-            },
-            'type': {
-                'ru': 'Тип:',
-                'en': 'Type:',
-                'es': 'Tipo:',
-                'pt': 'Tipo:'
-            },
-            'sens': {
-                'ru': 'Сенса',
-                'en': 'Sens',
-                'es': 'Sens',
-                'pt': 'Sens'
-            },
-            'gyro': {
-                'ru': 'Гироскоп',
-                'en': 'Gyroscope',
-                'es': 'Giroscopio',
-                'pt': 'Giroscópio'
-            },
-            'same_games': {
-                'ru': 'Выберите разные игры для конвертации',
-                'en': 'Select different games for conversion',
-                'es': 'Seleccione juegos diferentes para la conversión',
-                'pt': 'Selecione jogos diferentes para conversão'
-            },
-            'general_sens': {
-                'ru': 'Чувствит',
-                'en': 'Sensitivity',
-                'es': 'Sensibilidad',
-                'pt': 'Sensibilidade'
-            },
-            '3person': {
-                'ru': '3-е лицо',
-                'en': 'TPP No Scope',
-                'es': 'PTP sin visor',
-                'pt': '3ª Pessoa'
-            },
-            '1person': {
-                'ru': '1-е лицо',
-                'en': 'FPP No Scope',
-                'es': 'PPP sin visor',
-                'pt': '1ª Pessoa'
-            },
-            'col_holo_iron_side': {
-                'ru': 'Кол., голо.,\nмушка, боковой',
-                'en': 'Red Dot,Holo,...',
-                'es': 'Punto Rojo,Holo,...',
-                'pt': 'Ponto Verm., Holo,...'
-            },
-            'in_scope': {
-                'ru': 'С прицелом',
-                'en': 'Scope sensitivity',
-                'es': 'Sens.de la mirilla',
-                'pt': 'Telescópica'
-            },
-            '3person_dot': {
-                'ru': '3-е лицо',
-                'en': 'Third person',
-                'es': 'Tercera persona',
-                'pt': 'Terceira pessoa'
-            },
-            'standard': {
-                'ru': 'Стандарт (руль)',
-                'en': 'Steering',
-                'es': 'Dirección',
-                'pt': 'Condução'
-            },
-            'col_holo_aim': {
-                'ru': 'Кол., голо.,\nв реж. прицел.',
-                'en': 'Red dot,holo,ADS',
-                'es': 'Punto rojo/ holo.,apuntado',
-                'pt': 'Ponto verm./ holo.,mira'
-            },
-            'tactical': {
-                'ru': 'Тактический',
-                'en': 'Tactical',
-                'es': 'Mira táctica',
-                'pt': 'Escopo táctico'
-            },
-            'sniper': {
-                'ru': 'Снайперский',
-                'en': 'Sniper',
-                'es': 'Mira de précision',
-                'pt': 'Escopo do fuzil'
-            },
-            'settings': {
-                'ru': 'Настройки',
-                'en': 'Settings',
-                'es': 'Ajustes',
-                'pt': 'Configurações'
-            },
-            'language': {
-                'ru': 'Язык',
-                'en': 'Language',
-                'es': 'Idioma',
-                'pt': 'Idioma'
-            },
-            'menu': {
-                'ru': 'Меню',
-                'en': 'Menu',
-                'es': 'Menú',
-                'pt': 'Menu'
-            },
-            # === Переводы для раздела «О приложении» ===
-            'about_title': {
-                'ru': 'О приложении',
-                'en': 'About the App',
-                'es': 'Acerca de la aplicación',
-                'pt': 'Sobre o aplicativo'
-            },
+            'from_game': {'ru': 'Из игры', 'en': 'From game', 'es': 'De juego', 'pt': 'Do jogo'},
+            'to_game': {'ru': 'В игру', 'en': 'To game', 'es': 'A juego', 'pt': 'Para jogo'},
+            'accel_title': {'ru': 'Ускорение', 'en': 'Acceleration', 'es': 'Aceleración', 'pt': 'Aceleração'},
+            'mode': {'ru': 'Режим:', 'en': 'Mode:', 'es': 'Modo:', 'pt': 'Modo:'},
+            'auto': {'ru': 'Автоматически', 'en': 'Automatically', 'es': 'Automáticamente', 'pt': 'Automaticamente'},
+            'manual': {'ru': 'Вручную', 'en': 'Manually', 'es': 'Manualmente', 'pt': 'Manualmente'},
+            'type': {'ru': 'Тип:', 'en': 'Type:', 'es': 'Tipo:', 'pt': 'Tipo:'},
+            'sens': {'ru': 'Сенса', 'en': 'Sens', 'es': 'Sens', 'pt': 'Sens'},
+            'gyro': {'ru': 'Гироскоп', 'en': 'Gyroscope', 'es': 'Giroscopio', 'pt': 'Giroscópio'},
+            'same_games': {'ru': 'Выберите разные игры для конвертации', 'en': 'Select different games for conversion', 'es': 'Seleccione juegos diferentes para la conversión', 'pt': 'Selecione jogos diferentes para conversão'},
+            'general_sens': {'ru': 'Чувствит', 'en': 'Sensitivity', 'es': 'Sensibilidad', 'pt': 'Sensibilidade'},
+            '3person': {'ru': '3-е лицо', 'en': 'TPP No Scope', 'es': 'PTP sin visor', 'pt': '3ª Pessoa'},
+            '1person': {'ru': '1-е лицо', 'en': 'FPP No Scope', 'es': 'PPP sin visor', 'pt': '1ª Pessoa'},
+            'col_holo_iron_side': {'ru': 'Кол., голо.,\nмушка, боковой', 'en': 'Red Dot,Holo,...', 'es': 'Punto Rojo,Holo,...', 'pt': 'Ponto Verm., Holo,...'},
+            'in_scope': {'ru': 'С прицелом', 'en': 'Scope sensitivity', 'es': 'Sens.de la mirilla', 'pt': 'Telescópica'},
+            '3person_dot': {'ru': '3-е лицо', 'en': 'Third person', 'es': 'Tercera persona', 'pt': 'Terceira pessoa'},
+            'standard': {'ru': 'Стандарт (руль)', 'en': 'Steering', 'es': 'Dirección', 'pt': 'Condução'},
+            'col_holo_aim': {'ru': 'Кол., голо.,\nв реж. прицел.', 'en': 'Red dot,holo,ADS', 'es': 'Punto rojo/ holo.,apuntado', 'pt': 'Ponto verm./ holo.,mira'},
+            'tactical': {'ru': 'Тактический', 'en': 'Tactical', 'es': 'Mira táctica', 'pt': 'Escopo táctico'},
+            'sniper': {'ru': 'Снайперский', 'en': 'Sniper', 'es': 'Mira de précision', 'pt': 'Escopo do fuzil'},
+            'settings': {'ru': 'Настройки', 'en': 'Settings', 'es': 'Ajustes', 'pt': 'Configurações'},
+            'language': {'ru': 'Язык', 'en': 'Language', 'es': 'Idioma', 'pt': 'Idioma'},
+            'menu': {'ru': 'Меню', 'en': 'Menu', 'es': 'Menú', 'pt': 'Menu'},
+            'about_title': {'ru': 'О приложении', 'en': 'About the App', 'es': 'Acerca de la aplicación', 'pt': 'Sobre o aplicativo'},
             'about_text': {
-                'ru': """Mobile Games Sens Converter
-Версия: 1.0
-Автор: Taysin Dim
-Удобный конвертер чувствительности и гироскопа
-для Standoff 2, PUBG Mobile и Call of Duty Mobile.
-• Точная конвертация сенсы и гироскопа
-• Автоматический и ручной режим
-• Поддержка ускорения (PUBG)
-• Работает полностью оффлайн
-• Без рекламы и платных функций
-© 2026 Taysin Dim. Все права защищены.""",
-                'en': """Mobile Games Sens Converter
-Version: 1.0
-Author: Taysin Dim
-Convenient sensitivity and gyroscope converter
-for Standoff 2, PUBG Mobile and Call of Duty Mobile.
-• Accurate sensitivity and gyroscope conversion
-• Automatic and manual mode
-• Acceleration support (PUBG)
-• Works completely offline
-• No ads or paid features
-© 2026 Taysin Dim. All rights reserved.""",
-                'es': """Mobile Games Sens Converter
-Versión: 1.0
-Autor: Taysin Dim
-Convertidor práctico de sensibilidad y giroscopio
-para Standoff 2, PUBG Mobile y Call of Duty Mobile.
-• Conversión precisa de sensibilidad y giroscopio
-• Modo automático y manual
-• Soporte de aceleración (PUBG)
-• Funciona completamente sin conexión
-• Sin anuncios ni funciones de pago
-© 2026 Taysin Dim. Todos los derechos reservados.""",
-                'pt': """Mobile Games Sens Converter
-Versão: 1.0
-Autor: Taysin Dim
-Conversor conveniente de sensibilidade e giroscópio
-para Standoff 2, PUBG Mobile e Call of Duty Mobile.
-• Conversão precisa de sensibilidade e giroscópio
-• Modo automático e manual
-• Suporte à aceleração (PUBG)
-• Funciona completamente offline
-• Sem anúncios ou recursos pagos
-© 2026 Taysin Dim. Todos os direitos reservados."""
+                'ru': """Mobile Games Sens Converter\nВерсия: 1.0\nАвтор: Taysin Dim\nУдобный конвертер чувствительности и гироскопа\nдля Standoff 2, PUBG Mobile и Call of Duty Mobile.\n• Точная конвертация сенсы и гироскопа\n• Автоматический и ручной режим\n• Поддержка ускорения (PUBG)\n• Работает полностью оффлайн\n• Без рекламы и платных функций\n© 2026 Taysin Dim. Все права защищены.""",
+                'en': """Mobile Games Sens Converter\nVersion: 1.0\nAuthor: Taysin Dim\nConvenient sensitivity and gyroscope converter\nfor Standoff 2, PUBG Mobile and Call of Duty Mobile.\n• Accurate sensitivity and gyroscope conversion\n• Automatic and manual mode\n• Acceleration support (PUBG)\n• Works completely offline\n• No ads or paid features\n© 2026 Taysin Dim. All rights reserved.""",
+                'es': """Mobile Games Sens Converter\nVersión: 1.0\nAutor: Taysin Dim\nConvertidor práctico de sensibilidad y giroscopio\npara Standoff 2, PUBG Mobile y Call of Duty Mobile.\n• Conversión precisa de sensibilidad y giroscopio\n• Modo automático y manual\n• Soporte de aceleración (PUBG)\n• Funciona completamente sin conexión\n• Sin anuncios ni funciones de pago\n© 2026 Taysin Dim. Todos los derechos reservados.""",
+                'pt': """Mobile Games Sens Converter\nVersão: 1.0\nAutor: Taysin Dim\nConversor conveniente de sensibilidade e giroscópio\npara Standoff 2, PUBG Mobile e Call of Duty Mobile.\n• Conversão precisa de sensibilidade e giroscópio\n• Modo automático e manual\n• Suporte à aceleração (PUBG)\n• Funciona completamente offline\n• Sem anúncios ou recursos pagos\n© 2026 Taysin Dim. Todos os direitos reservados."""
             },
-            'donate_button': {
-                'ru': 'Поддержать автора на Boosty',
-                'en': 'Support the author on Boosty',
-                'es': 'Apoyar al autor en Boosty',
-                'pt': 'Apoiar o autor no Boosty'
-            },
-            # === НОВАЯ КНОПКА НА ГЛАВНОМ ЭКРАНЕ ===
-            'author_page_button': {
-                'ru': 'Страница автора',
-                'en': 'Author\'s Page',
-                'es': 'Página del autor',
-                'pt': 'Página do autor'
-            }
+            'donate_button': {'ru': 'Поддержать автора на Boosty', 'en': 'Support the author on Boosty', 'es': 'Apoyar al autor en Boosty', 'pt': 'Apoiar o autor no Boosty'},
+            'author_page_button': {'ru': 'Страница автора', 'en': "Author's Page", 'es': 'Página del autor', 'pt': 'Página do autor'}
         }
-        self.langs = {
-            'ru': 'Русский',
-            'en': 'English',
-            'es': 'Español',
-            'pt': 'Português (BR)'
-        }
+        self.langs = {'ru': 'Русский', 'en': 'English', 'es': 'Español', 'pt': 'Português (BR)'}
         self.setup_conversion_data()
         self.entry_widgets = []
         self.left_widgets = []
+        self.acceleration = AccelerationManager(self.get_text)
         self.create_widgets()
 
     def get_text(self, key):
         return self.translations.get(key, {}).get(self.language, key)
 
     def setup_conversion_data(self):
-        # Таблица для сенсы между Standoff 2 и PUBG
         self.standoff_pubg_sens = {
             "general_3p": {0.0: 0, 1.0: 12, 2.0: 50, 3.0: 75, 4.0: 100, 6.0: 150, 10.0: 250, 96.0: 2343},
             "general_1p": {0.0: 0, 1.0: 12, 2.0: 50, 3.0: 75, 4.0: 100, 6.0: 150, 10.0: 250, 96.0: 2343},
@@ -337,7 +298,6 @@ para Standoff 2, PUBG Mobile e Call of Duty Mobile.
             "6x": {0.0: 0, 1.0: 4, 2.0: 7, 3.0: 11, 4.0: 15, 6.0: 23, 10.0: 37, 96.0: 356},
             "8x": {0.0: 0, 1.0: 3, 2.0: 6, 3.0: 10, 4.0: 13, 6.0: 19, 10.0: 31, 96.0: 300}
         }
-        # Таблица для гироскопа между Standoff 2 и PUBG
         self.standoff_pubg_gyro = {
             "general_3p": {0.0: 0, 0.5: 83, 1.0: 167, 1.5: 248, 2.0: 330, 7.77: 1287, 32.7: 5456},
             "general_1p": {0.0: 0, 0.5: 83, 1.0: 167, 1.5: 248, 2.0: 330, 7.77: 1287, 32.7: 5456},
@@ -348,7 +308,6 @@ para Standoff 2, PUBG Mobile e Call of Duty Mobile.
             "6x": {0.0: 0, 0.5: 30, 1.0: 63, 1.5: 93, 2.0: 124, 7.77: 481, 32.7: 2224},
             "8x": {0.0: 0, 0.5: 25, 1.0: 51, 1.5: 77, 2.0: 103, 7.77: 400, 32.7: 2550}
         }
-        # Таблица для сенсы между Standoff 2 и CoD
         self.standoff_cod_sens = {
             "general_3p": {0.0: 0, 1.0: 39, 2.0: 79, 3.0: 117, 4.0: 156, 6.0: 232, 10.0: 384, 96.0: 3652},
             "general_1p": {0.0: 0, 1.0: 39, 2.0: 79, 3.0: 117, 4.0: 156, 6.0: 232, 10.0: 384, 96.0: 3652},
@@ -360,7 +319,6 @@ para Standoff 2, PUBG Mobile e Call of Duty Mobile.
             "6x_sniper": {0.0: 0, 1.0: 41, 2.0: 83, 3.0: 126, 4.0: 167, 6.0: 247, 10.0: 380, 96.0: 3240},
             "8x": {0.0: 0, 1.0: 29, 2.0: 58, 3.0: 91, 4.0: 119, 6.0: 176, 10.0: 254, 96.0: 1931}
         }
-        # Таблица для гироскопа между Standoff 2 и CoD
         self.standoff_cod_gyro = {
             "general_3p": {0.0: 0, 0.6: 31, 2.4: 126, 32.7: 1917},
             "general_1p": {0.0: 0, 0.6: 31, 2.4: 126, 32.7: 1917},
@@ -372,20 +330,17 @@ para Standoff 2, PUBG Mobile e Call of Duty Mobile.
             "6x_sniper": {0.0: 0, 0.6: 8, 2.4: 34, 32.7: 464},
             "8x": {0.0: 0, 0.6: 5, 2.4: 22, 32.7: 300}
         }
-
-        # Таблица для сенсы между PUBG и CoD
         self.pubg_cod_sens = {
-    "general_3p": {0: 0, 12: 39, 50: 79, 75: 117, 100: 156, 150: 232, 250: 384, 2343: 3652},
-    "general_1p": {0: 0, 12: 39, 50: 79, 75: 117, 100: 156, 150: 232, 250: 384, 2343: 3652},
-    "col": {0: 0, 16: 97, 32: 193, 48: 293, 64: 397, 96: 617, 153: 1105, 1537: 11596},
-    "2x": {0: 0, 13: 132, 26: 263, 39: 394, 52: 525, 77: 787, 123: 1311, 1218: 12577},
-    "3x": {0: 0, 8: 76, 15: 153, 23: 233, 31: 316, 46: 491, 74: 877, 731: 9176},
-    "4x": {0: 0, 6: 43, 12: 86, 18: 131, 24: 173, 34: 256, 55: 392, 543: 3316},
-    "6x": {0: 0, 4: 36, 7: 72, 11: 111, 15: 146, 23: 216, 37: 323, 356: 2624},
-    "8x": {0: 0, 3: 29, 6: 58, 10: 91, 13: 119, 19: 176, 31: 254, 300: 1931},
-    "6x_sniper": {0: 0, 4: 41, 7: 83, 11: 126, 15: 167, 23: 247, 37: 380, 356: 3240}
-}
-        # Таблица для гироскопа между PUBG и CoD
+            "general_3p": {0: 0, 12: 39, 50: 79, 75: 117, 100: 156, 150: 232, 250: 384, 2343: 3652},
+            "general_1p": {0: 0, 12: 39, 50: 79, 75: 117, 100: 156, 150: 232, 250: 384, 2343: 3652},
+            "col": {0: 0, 16: 97, 32: 193, 48: 293, 64: 397, 96: 617, 153: 1105, 1537: 11596},
+            "2x": {0: 0, 13: 132, 26: 263, 39: 394, 52: 525, 77: 787, 123: 1311, 1218: 12577},
+            "3x": {0: 0, 8: 76, 15: 153, 23: 233, 31: 316, 46: 491, 74: 877, 731: 9176},
+            "4x": {0: 0, 6: 43, 12: 86, 18: 131, 24: 173, 34: 256, 55: 392, 543: 3316},
+            "6x": {0: 0, 4: 36, 7: 72, 11: 111, 15: 146, 23: 216, 37: 323, 356: 2624},
+            "8x": {0: 0, 3: 29, 6: 58, 10: 91, 13: 119, 19: 176, 31: 254, 300: 1931},
+            "6x_sniper": {0: 0, 4: 41, 7: 83, 11: 126, 15: 167, 23: 247, 37: 380, 356: 3240}
+        }
         self.pubg_cod_gyro = {
             "general_3p": {0: 0, 400: 126, 5456: 1719},
             "general_1p": {0: 0, 400: 126, 5456: 1719},
@@ -397,11 +352,6 @@ para Standoff 2, PUBG Mobile e Call of Duty Mobile.
             "8x": {0: 0, 122: 22, 1664: 300},
             "6x_sniper": {0: 0, 163: 34, 2224: 464}
         }
-        # Данные для конвертации ускорения между Standoff и CoD
-        self.standoff_cod_accel = {
-            0: 0,
-            0.25: 300
-        }
 
     def create_widgets(self):
         top_frame = BoxLayout(orientation='horizontal', size_hint_y=None, height=dp(120))
@@ -412,33 +362,23 @@ para Standoff 2, PUBG Mobile e Call of Duty Mobile.
         self.left_title.bind(size=self.left_title.setter('text_size'))
         left_game_frame.add_widget(self.left_title)
         games = {'Standoff 2': 'standoff', 'PUBG Mobile': 'pubg', 'CoD Mobile': 'cod'}
-        self.left_spinner = Spinner(
-            text='Standoff 2',
-            values=list(games.keys()),
-            size_hint_y=None,
-            height=dp(44)
-        )
+        self.left_spinner = Spinner(text='Standoff 2', values=list(games.keys()), size_hint_y=None, height=dp(44))
         self.left_spinner.bind(text=lambda instance, value: self.on_left_game_change(value))
         left_game_frame.add_widget(self.left_spinner)
+
         right_game_frame = BoxLayout(orientation='vertical')
         top_frame.add_widget(right_game_frame)
         self.right_title = Label(text=self.get_text("to_game"), size_hint_y=None, height=dp(30), halign='center', valign='middle')
         self.right_title.bind(size=self.right_title.setter('text_size'))
         right_game_frame.add_widget(self.right_title)
-        self.right_spinner = Spinner(
-            text='CoD Mobile',
-            values=list(games.keys()),
-            size_hint_y=None,
-            height=dp(44)
-        )
+        self.right_spinner = Spinner(text='CoD Mobile', values=list(games.keys()), size_hint_y=None, height=dp(44))
         self.right_spinner.bind(text=lambda instance, value: self.on_right_game_change(value))
         right_game_frame.add_widget(self.right_spinner)
+
         self.accel_frame = BoxLayout(orientation='vertical', size_hint_y=None, height=dp(60))
         self.add_widget(self.accel_frame)
-        self.accel_title = Label(text=self.get_text("accel_title"), size_hint_y=None, height=dp(30))
-        self.accel_frame.add_widget(self.accel_title)
-        self.accel_inner_frame = BoxLayout(orientation='horizontal')
-        self.accel_frame.add_widget(self.accel_inner_frame)
+        self.acceleration.setup_ui(self.accel_frame)
+
         settings_frame = BoxLayout(orientation='vertical', size_hint_y=None, height=dp(120))
         self.add_widget(settings_frame)
         mode_frame = BoxLayout(orientation='horizontal', size_hint_y=None, height=dp(60))
@@ -452,6 +392,7 @@ para Standoff 2, PUBG Mobile e Call of Duty Mobile.
             btn.bind(state=self.on_mode_change)
             mode_frame.add_widget(btn)
             self.mode_buttons[mode] = btn
+
         sensor_frame = BoxLayout(orientation='horizontal', size_hint_y=None, height=dp(60))
         settings_frame.add_widget(sensor_frame)
         self.type_label = Label(text=self.get_text("type"), size_hint_x=None, width=dp(60))
@@ -463,27 +404,19 @@ para Standoff 2, PUBG Mobile e Call of Duty Mobile.
             btn.bind(state=self.on_sensor_change)
             sensor_frame.add_widget(btn)
             self.sensor_buttons[sensor] = btn
+
         self.table_scroll = ScrollView()
         self.add_widget(self.table_scroll)
         self.table_frame = GridLayout(cols=4, spacing=dp(5), size_hint_y=None, row_force_default=True, row_default_height=dp(40))
         self.table_frame.bind(minimum_height=self.table_frame.setter('height'))
         self.table_scroll.add_widget(self.table_frame)
 
-        # === НОВАЯ КНОПКА «СТРАНИЦА АВТОРА» ВНИЗУ СЛЕВА ПОД ТАБЛИЦЕЙ ===
         self.footer = BoxLayout(orientation='horizontal', size_hint_y=None, height=dp(50), padding=[dp(10), dp(5), dp(10), dp(5)])
         self.add_widget(self.footer)
-        self.author_page_btn = Button(
-            text=self.get_text('author_page_button'),
-            size_hint_x=None,
-            width=dp(220),
-            height=dp(40),
-            background_color=(0.2, 0.6, 1, 1),
-            color=(1, 1, 1, 1),
-            font_size=dp(14)
-        )
+        self.author_page_btn = Button(text=self.get_text('author_page_button'), size_hint_x=None, width=dp(220), height=dp(40),
+                                      background_color=(0.2, 0.6, 1, 1), color=(1, 1, 1, 1), font_size=dp(14))
         self.author_page_btn.bind(on_press=lambda *args: webbrowser.open('https://boosty.to/hevlob_so_2'))
         self.footer.add_widget(self.author_page_btn)
-        # Пустой виджет чтобы кнопка была слева
         self.footer.add_widget(Widget())
 
         self.update_ui()
@@ -499,7 +432,7 @@ para Standoff 2, PUBG Mobile e Call of Duty Mobile.
     def update_texts(self):
         self.left_title.text = self.get_text('from_game')
         self.right_title.text = self.get_text('to_game')
-        self.accel_title.text = self.get_text('accel_title')
+        self.acceleration.setup_ui(self.accel_frame)
         self.mode_label.text = self.get_text('mode')
         self.type_label.text = self.get_text('type')
         for mode, btn in self.mode_buttons.items():
@@ -530,7 +463,6 @@ para Standoff 2, PUBG Mobile e Call of Duty Mobile.
             self.update_ui()
 
     def update_ui(self):
-        self.accel_inner_frame.clear_widgets()
         self.table_frame.clear_widgets()
         self.entry_widgets = []
         self.left_widgets = []
@@ -538,179 +470,8 @@ para Standoff 2, PUBG Mobile e Call of Duty Mobile.
             self.accel_frame.height = 0
         else:
             self.accel_frame.height = dp(60)
-            self.setup_acceleration_ui()
+            self.acceleration.update_ui(self.left_game, self.right_game)
         self.setup_conversion_table()
-
-    def setup_acceleration_ui(self):
-        left_game = self.left_game
-        right_game = self.right_game
-        if left_game == right_game:
-            return
-        if 'pubg' in [left_game, right_game]:
-            pubg_side = 'left' if left_game == 'pubg' else 'right'
-            other_game = left_game if pubg_side == 'right' else right_game
-            readonly = pubg_side == 'left'
-
-            cb = CheckBox(active=self.pubg_accel)
-            cb.bind(active=self.update_acceleration)
-            self.bind(pubg_accel=cb.setter('active'))
-            self.pubg_checkbox = cb
-
-            if other_game == 'standoff':
-                input_widget = TextInput(text='', multiline=False, input_filter='float', height=dp(40), size_hint_y=None, padding=[dp(5), dp(5), dp(5), dp(5)], font_size=dp(14))
-                input_widget.readonly = readonly
-                if readonly:
-                    input_widget.background_color = [0.8, 0.8, 0.8, 1]
-                    input_widget.foreground_color = [0, 0, 0, 1]
-                    input_widget.text = f"{self.standoff_accel:.2f}" if self.standoff_accel != 0.0 else ''
-                if not readonly:
-                    input_widget.bind(text=self.on_standoff_accel_text)
-                self.standoff_accel_input = input_widget
-                other_label = "Standoff"
-            elif other_game == 'cod':
-                input_widget = TextInput(text='', multiline=False, input_filter='int', height=dp(40), size_hint_y=None, padding=[dp(5), dp(5), dp(5), dp(5)], font_size=dp(14))
-                input_widget.readonly = readonly
-                if readonly:
-                    input_widget.background_color = [0.8, 0.8, 0.8, 1]
-                    input_widget.foreground_color = [0, 0, 0, 1]
-                    input_widget.text = str(self.cod_accel) if self.cod_accel != 0 else ''
-                if not readonly:
-                    input_widget.bind(text=self.on_cod_accel_text)
-                self.cod_accel_input = input_widget
-                other_label = "CoD"
-
-            if pubg_side == 'right':
-                self.other_accel_input = input_widget
-                self.bind(pubg_accel=self.update_other_input_state)
-                self.update_other_input_state(None, self.pubg_accel)
-
-            if pubg_side == 'left':
-                self.accel_inner_frame.add_widget(Label(text="PUBG", size_hint_x=None, width=dp(100)))
-                self.accel_inner_frame.add_widget(cb)
-                self.accel_inner_frame.add_widget(Label(text=other_label, size_hint_x=None, width=dp(100)))
-                self.accel_inner_frame.add_widget(input_widget)
-            else:
-                self.accel_inner_frame.add_widget(Label(text=other_label, size_hint_x=None, width=dp(100)))
-                self.accel_inner_frame.add_widget(input_widget)
-                self.accel_inner_frame.add_widget(Label(text="PUBG", size_hint_x=None, width=dp(100)))
-                self.accel_inner_frame.add_widget(cb)
-        elif left_game == 'standoff' and right_game == 'cod':
-            self.accel_inner_frame.add_widget(Label(text="Standoff", size_hint_x=None, width=dp(100)))
-            self.standoff_accel_input = TextInput(text='', multiline=False, input_filter='float', height=dp(40), size_hint_y=None, padding=[dp(5), dp(5), dp(5), dp(5)], font_size=dp(14))
-            self.accel_inner_frame.add_widget(self.standoff_accel_input)
-            self.standoff_accel_input.bind(text=self.on_standoff_accel_text)
-            self.accel_inner_frame.add_widget(Label(text="CoD", size_hint_x=None, width=dp(100)))
-            self.cod_accel_input = TextInput(text='', multiline=False, readonly=True, input_filter='int', height=dp(40), size_hint_y=None, padding=[dp(5), dp(5), dp(5), dp(5)], font_size=dp(14), background_color=[0.8, 0.8, 0.8, 1], foreground_color=[0, 0, 0, 1])
-            self.accel_inner_frame.add_widget(self.cod_accel_input)
-            self.cod_accel_input.text = str(self.cod_accel) if self.cod_accel != 0 else ''
-        elif left_game == 'cod' and right_game == 'standoff':
-            self.accel_inner_frame.add_widget(Label(text="CoD", size_hint_x=None, width=dp(100)))
-            self.cod_accel_input = TextInput(text='', multiline=False, input_filter='int', height=dp(40), size_hint_y=None, padding=[dp(5), dp(5), dp(5), dp(5)], font_size=dp(14))
-            self.accel_inner_frame.add_widget(self.cod_accel_input)
-            self.cod_accel_input.bind(text=self.on_cod_accel_text)
-            self.accel_inner_frame.add_widget(Label(text="Standoff", size_hint_x=None, width=dp(100)))
-            self.standoff_accel_input = TextInput(text='', multiline=False, readonly=True, input_filter='float', height=dp(40), size_hint_y=None, padding=[dp(5), dp(5), dp(5), dp(5)], font_size=dp(14), background_color=[0.8, 0.8, 0.8, 1], foreground_color=[0, 0, 0, 1])
-            self.accel_inner_frame.add_widget(self.standoff_accel_input)
-            self.standoff_accel_input.text = f"{self.standoff_accel:.2f}" if self.standoff_accel != 0.0 else ''
-
-    def update_other_input_state(self, instance, value):
-        self.other_accel_input.readonly = value
-        self.other_accel_input.background_color = [0.8, 0.8, 0.8, 1] if value else [1, 1, 1, 1]
-        self.other_accel_input.foreground_color = [0, 0, 0, 1]
-        self.update_accel_inputs()
-
-    def on_standoff_accel_text(self, instance, value):
-        if value == '':
-            self.standoff_accel = 0.0
-        else:
-            try:
-                val = float(value)
-                self.standoff_accel = max(0.0, val)
-            except ValueError:
-                self.standoff_accel = 0.0
-                instance.text = ''
-        if hasattr(self, 'pubg_checkbox'):
-            self.pubg_checkbox.unbind(active=self.update_acceleration)
-            self.pubg_accel = abs(self.standoff_accel - 0.42) <= 0.01
-            self.pubg_checkbox.bind(active=self.update_acceleration)
-        self.update_standoff_cod_accel()
-        self.update_accel_inputs()
-
-    def on_cod_accel_text(self, instance, value):
-        if value == '':
-            self.cod_accel = 0
-        else:
-            try:
-                val = int(value)
-                self.cod_accel = max(0, val)
-            except ValueError:
-                self.cod_accel = 0
-                instance.text = ''
-        if hasattr(self, 'pubg_checkbox'):
-            self.pubg_checkbox.unbind(active=self.update_acceleration)
-            self.pubg_accel = abs(self.cod_accel - 300) <= 1
-            self.pubg_checkbox.bind(active=self.update_acceleration)
-        self.update_standoff_cod_accel()
-        self.update_accel_inputs()
-
-    def update_accel_inputs(self):
-        if hasattr(self, 'standoff_accel_input') and self.standoff_accel_input.readonly:
-            self.standoff_accel_input.text = f"{self.standoff_accel:.2f}" if self.standoff_accel != 0.0 else ''
-        if hasattr(self, 'cod_accel_input') and self.cod_accel_input.readonly:
-            self.cod_accel_input.text = str(self.cod_accel) if self.cod_accel != 0 else ''
-
-    def update_acceleration(self, instance, active):
-        self.pubg_accel = active
-        if active:
-            left_game = self.left_game
-            right_game = self.right_game
-            if left_game == 'pubg' and right_game == 'standoff':
-                self.standoff_accel = 0.42
-            elif left_game == 'standoff' and right_game == 'pubg':
-                self.standoff_accel = 0.42
-            elif left_game == 'pubg' and right_game == 'cod':
-                self.cod_accel = 300
-            elif left_game == 'cod' and right_game == 'pubg':
-                self.cod_accel = 300
-        else:
-            self.standoff_accel = 0.0
-            self.cod_accel = 0
-            for _, right_input, _, _, _ in self.entry_widgets:
-                right_input.text = ''
-            for left_input, _, _ in self.left_widgets:
-                left_input.text = ''
-        self.update_accel_inputs()
-
-    def update_standoff_cod_accel(self):
-        if self.left_game == 'standoff' and self.right_game == 'cod':
-            standoff_val = self.standoff_accel
-            keys = sorted(self.standoff_cod_accel.keys())
-            if standoff_val <= keys[0]:
-                self.cod_accel = self.standoff_cod_accel[keys[0]]
-            elif standoff_val >= keys[-1]:
-                self.cod_accel = self.standoff_cod_accel[keys[-1]]
-            else:
-                for i in range(len(keys)-1):
-                    if keys[i] <= standoff_val <= keys[i+1]:
-                        ratio = (standoff_val - keys[i]) / (keys[i+1] - keys[i])
-                        cod_value = self.standoff_cod_accel[keys[i]] + ratio * (self.standoff_cod_accel[keys[i+1]] - self.standoff_cod_accel[keys[i]])
-                        self.cod_accel = int(round(cod_value))
-                        break
-        elif self.left_game == 'cod' and self.right_game == 'standoff':
-            cod_val = self.cod_accel
-            values = sorted(self.standoff_cod_accel.items(), key=lambda x: x[1])
-            if cod_val <= values[0][1]:
-                self.standoff_accel = values[0][0]
-            elif cod_val >= values[-1][1]:
-                self.standoff_accel = values[-1][0]
-            else:
-                for i in range(len(values)-1):
-                    if values[i][1] <= cod_val <= values[i+1][1]:
-                        ratio = (cod_val - values[i][1]) / (values[i+1][1] - values[i][1])
-                        standoff_value = values[i][0] + ratio * (values[i+1][0] - values[i][0])
-                        self.standoff_accel = round(standoff_value, 2)
-                        break
-        self.update_accel_inputs()
 
     def setup_conversion_table(self):
         left_game = self.left_game
@@ -1137,6 +898,81 @@ para Standoff 2, PUBG Mobile e Call of Duty Mobile.
                 return round(value, 2) if is_standoff_output else int(round(value))
         return inputs[-1]
 
+
+# ====================== Остальной код приложения ======================
+class Blocker(Widget):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.app = App.get_running_app()
+        self.touch_start_x = None
+        self.touch_start_y = None
+        self.is_swiping = False
+
+    def on_touch_down(self, touch):
+        if self.collide_point(*touch.pos):
+            self.touch_start_x = touch.x
+            self.touch_start_y = touch.y
+            touch.grab(self)
+            return True
+        return super().on_touch_down(touch)
+
+    def on_touch_move(self, touch):
+        if touch.grab_current == self:
+            delta_x = touch.x - self.touch_start_x
+            delta_y = touch.y - self.touch_start_y
+            if abs(delta_x) > abs(delta_y) and abs(delta_x) > dp(10):
+                self.is_swiping = True
+                new_x = min(0, max(-self.app.menu.width, delta_x))
+                self.app.menu.x = new_x
+                return True
+        return super().on_touch_move(touch)
+
+    def on_touch_up(self, touch):
+        if touch.grab_current == self:
+            touch.ungrab(self)
+            if self.is_swiping:
+                self.is_swiping = False
+                if self.app.menu.x < -self.app.menu.width / 2:
+                    anim = Animation(x=-self.app.menu.width, d=0.2)
+                    anim.start(self.app.menu)
+                    self.app.root.remove_widget(self)
+                    del self.app.blocker
+                    self.app.menu_btn.text = '☰'
+                else:
+                    anim = Animation(x=0, d=0.2)
+                    anim.start(self.app.menu)
+                return True
+            else:
+                anim = Animation(x=-self.app.menu.width, d=0.2)
+                anim.start(self.app.menu)
+                self.app.root.remove_widget(self)
+                del self.app.blocker
+                self.app.menu_btn.text = '☰'
+                return True
+        return super().on_touch_up(touch)
+
+
+class Menu(BoxLayout):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        with self.canvas.before:
+            Color(0.8, 0.8, 0.8, 1)
+            self.rect = Rectangle(size=self.size, pos=self.pos)
+        self.bind(size=self._update_rect, pos=self._update_rect)
+
+    def _update_rect(self, instance, value):
+        self.rect.pos = instance.pos
+        self.rect.size = instance.size
+
+    def on_touch_down(self, touch):
+        if self.collide_point(*touch.pos):
+            for child in reversed(self.children):
+                if child.dispatch('on_touch_down', touch):
+                    return True
+            return True
+        return super(Menu, self).on_touch_down(touch)
+
+
 class RootLayout(FloatLayout):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -1183,6 +1019,7 @@ class RootLayout(FloatLayout):
                 return True
         return super().on_touch_up(touch)
 
+
 class ConverterApp(App):
     def build(self):
         Window.fullscreen = 'auto'
@@ -1218,42 +1055,17 @@ class ConverterApp(App):
         self.settings_item.add_widget(inner)
         self.lang_label = Label(text=self.converter.get_text('language'), size_hint_y=None, height=dp(30))
         inner.add_widget(self.lang_label)
-        self.lang_spinner = Spinner(
-            text=self.converter.langs[self.converter.language],
-            values=list(self.converter.langs.values()),
-            size_hint_y=None,
-            height=dp(44)
-        )
+        self.lang_spinner = Spinner(text=self.converter.langs[self.converter.language], values=list(self.converter.langs.values()), size_hint_y=None, height=dp(44))
         self.lang_spinner.bind(text=self.converter.on_lang_change)
         inner.add_widget(self.lang_spinner)
 
-        # Раздел «О приложении» с переводом
         self.about_item = AccordionItem(title=self.converter.get_text('about_title'))
         self.acc.add_widget(self.about_item)
         about_inner = BoxLayout(orientation='vertical', padding=dp(10), spacing=dp(5))
         self.about_item.add_widget(about_inner)
-
-        self.about_label = Label(
-            text=self.converter.get_text('about_text'),
-            size_hint_y=None,
-            height=dp(280),
-            halign='left',
-            valign='top',
-            text_size=(dp(230), None),
-            font_size=dp(13),
-            markup=False
-        )
+        self.about_label = Label(text=self.converter.get_text('about_text'), size_hint_y=None, height=dp(280), halign='left', valign='top', text_size=(dp(230), None), font_size=dp(13), markup=False)
         about_inner.add_widget(self.about_label)
-
-        # Кликабельная кнопка доната
-        self.donate_btn = Button(
-            text=self.converter.get_text('donate_button'),
-            size_hint_y=None,
-            height=dp(50),
-            background_color=(0.2, 0.6, 1, 1),
-            color=(1, 1, 1, 1),
-            font_size=dp(15)
-        )
+        self.donate_btn = Button(text=self.converter.get_text('donate_button'), size_hint_y=None, height=dp(50), background_color=(0.2, 0.6, 1, 1), color=(1, 1, 1, 1), font_size=dp(15))
         self.donate_btn.bind(on_press=lambda *args: webbrowser.open('https://boosty.to/hevlob_so_2/donate'))
         about_inner.add_widget(self.donate_btn)
 
@@ -1261,7 +1073,6 @@ class ConverterApp(App):
         self.menu_header.text = self.converter.get_text('menu')
         self.settings_item.title = self.converter.get_text('settings')
         self.lang_label.text = self.converter.get_text('language')
-        # Обновляем раздел «О приложении» при смене языка
         self.about_item.title = self.converter.get_text('about_title')
         self.about_label.text = self.converter.get_text('about_text')
         self.donate_btn.text = self.converter.get_text('donate_button')
@@ -1278,7 +1089,8 @@ class ConverterApp(App):
             anim.start(self.menu)
             self.root.remove_widget(self.blocker)
             del self.blocker
-            self.menu_btn.text = ' '
+            self.menu_btn.text = '☰'
+
 
 if __name__ == '__main__':
     ConverterApp().run()
