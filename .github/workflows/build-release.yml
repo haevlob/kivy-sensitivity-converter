@@ -15,25 +15,12 @@ jobs:
         run: |
           echo "${{ secrets.KEYSTORE_BASE64 }}" | tr -d '\n\r ' | base64 --decode > sensitivityconverter.keystore
 
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            python3 python3-pip openjdk-17-jdk \
-            autoconf automake libtool pkg-config \
-            libffi-dev zlib1g-dev libncurses-dev \
-            cmake libssl-dev libtinfo6
-
-      - name: Install Buildozer and Cython
-        run: |
-          pip3 install --user --upgrade pip
-          pip3 install --user buildozer cython==3.0.11
-
-      - name: Build Release APK
-        run: |
-          export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
-          export PATH=$PATH:$HOME/.local/bin
-          buildozer -v android release
+      - name: Build Release APK with Buildozer
+        uses: ArtemSBulgakov/buildozer-action@v1
+        with:
+          command: buildozer android release
+          buildozer_version: stable
+          args: --no-set-owner   # обход проблем с правами
 
       - name: Upload Release APK
         uses: actions/upload-artifact@v4
