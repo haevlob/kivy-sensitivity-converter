@@ -1,7 +1,7 @@
 name: Build Release APK
 
 on:
-  workflow_dispatch:   # Запускать только вручную (чтобы не собиралось при каждом push)
+  workflow_dispatch:
 
 jobs:
   build:
