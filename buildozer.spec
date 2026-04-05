@@ -6,8 +6,8 @@ version = 1.0
 author = Taysin Dim
 author_email = haevlob@gmail.com
 
-# ←←← ДОБАВЬ ЭТУ СТРОКУ ↓↓↓
 icon.filename = icon.png
+presplash.filename = presplash.png
 
 source.dir = .
 source.include_exts = py,png,jpg,kv,atlas
