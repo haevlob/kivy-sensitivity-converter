@@ -1,7 +1,7 @@
 name: Build Release APK
 
 on:
-  workflow_dispatch:   # Запуск только вручную
+  workflow_dispatch:
 
 jobs:
   build:
@@ -19,13 +19,15 @@ jobs:
 
       - name: Decode Keystore
         run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > sensitivityconverter.keystore
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | tr -d '\n\r ' | base64 --decode > sensitivityconverter.keystore
 
-      - name: Build Release APK
+      - name: Build Release APK with Buildozer
         uses: ArtemSBulgakov/buildozer-action@v1
         with:
           command: buildozer android release
           buildozer_version: stable
+          # Добавляем флаг, чтобы отключить проблемный chown
+          args: --no-set-owner
 
       - name: Upload Release APK
         uses: actions/upload-artifact@v4
