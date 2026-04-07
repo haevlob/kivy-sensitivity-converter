@@ -18,3 +18,4 @@ android.api = 35
 android.ndk = 25b
 android.accept_sdk_license = True
 android.release = True
+android.release_artifact = apk
