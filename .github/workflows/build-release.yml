@@ -42,15 +42,20 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create "${{ steps.prepare.outputs.tag }}" \
-            --title "Mobile Games Sens Converter ${{ steps.prepare.outputs.version }}" \
-            --notes "Автоматическая сборка приложения для конвертации чувствительности между Standoff 2, PUBG Mobile и Call of Duty Mobile.
+          # Создаём файл с описанием релиза (чтобы избежать ошибок YAML)
+          cat > release_notes.md << 'EOF'
+Автоматическая сборка приложения для конвертации чувствительности между Standoff 2, PUBG Mobile и Call of Duty Mobile.
 
 📱 **Скачай APK ниже и установи на Android** (разреши установку из неизвестных источников).
 
 Изменения: обновлённая сборка с поддержкой нескольких языков, точной конвертацией сенсы и гироскопа.
 
-© 2026 Taysin Dim" \
+© 2026 Taysin Dim
+EOF
+
+          gh release create "${{ steps.prepare.outputs.tag }}" \
+            --title "Mobile Games Sens Converter ${{ steps.prepare.outputs.version }}" \
+            --notes-file release_notes.md \
             "${{ steps.prepare.outputs.apk_path }}"
 
       - name: Upload Artifact (for debugging)
