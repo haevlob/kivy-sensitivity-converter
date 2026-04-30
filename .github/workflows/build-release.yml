@@ -6,6 +6,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Нужно для создания GitHub Releases
 
     steps:
       - name: Checkout code
@@ -14,6 +16,7 @@ jobs:
       - name: Decode Keystore
         run: |
           echo "${{ secrets.KEYSTORE_BASE64 }}" | tr -d '\n\r ' | base64 --decode > sensitivityconverter.keystore
+        # Если шаг падает или файл пустой — проверь секреты в Settings → Secrets and variables → Actions
 
       - name: Build Release APK
         run: |
@@ -26,7 +29,32 @@ jobs:
             ghcr.io/kivy/buildozer:latest \
             android release
 
-      - name: Upload Release APK
+      - name: Prepare APK for Release
+        id: prepare
+        run: |
+          APK_PATH=$(ls bin/*.apk | head -1)
+          echo "apk_path=$APK_PATH" >> $GITHUB_OUTPUT
+          VERSION=$(grep -oP 'version = \K[0-9.]+' buildozer.spec || echo "1.0")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag=v$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        if: success()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ steps.prepare.outputs.tag }}" \
+            --title "Mobile Games Sens Converter ${{ steps.prepare.outputs.version }}" \
+            --notes "Автоматическая сборка приложения для конвертации чувствительности между Standoff 2, PUBG Mobile и Call of Duty Mobile.
+
+📱 **Скачай APK ниже и установи на Android** (разреши установку из неизвестных источников).
+
+Изменения: обновлённая сборка с поддержкой нескольких языков, точной конвертацией сенсы и гироскопа.
+
+© 2026 Taysin Dim" \
+            "${{ steps.prepare.outputs.apk_path }}"
+
+      - name: Upload Artifact (for debugging)
         uses: actions/upload-artifact@v4
         with:
           name: sensitivityconverter-release-apk
