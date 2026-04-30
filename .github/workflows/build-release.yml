@@ -7,7 +7,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: write  # Нужно для создания GitHub Releases
+      contents: write
 
     steps:
       - name: Checkout code
@@ -16,7 +16,6 @@ jobs:
       - name: Decode Keystore
         run: |
           echo "${{ secrets.KEYSTORE_BASE64 }}" | tr -d '\n\r ' | base64 --decode > sensitivityconverter.keystore
-        # Если шаг падает или файл пустой — проверь секреты в Settings → Secrets and variables → Actions
 
       - name: Build Release APK
         run: |
