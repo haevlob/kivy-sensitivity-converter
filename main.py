@@ -302,10 +302,10 @@ para Standoff 2, PUBG Mobile e Call of Duty Mobile.
                 'pt': 'Apoiar o autor no Boosty'
             },
             'author_page_button': {
-                'ru': 'Страница автора',
-                'en': 'Author\'s Page',
-                'es': 'Página del autor',
-                'pt': 'Página do autor'
+                'ru': 'Автор',
+                'en': 'Author',
+                'es': 'Autor',
+                'pt': 'Autor'
             }
         }
         self.langs = {
@@ -463,7 +463,7 @@ para Standoff 2, PUBG Mobile e Call of Duty Mobile.
         self.author_page_btn = Button(
             text=self.get_text('author_page_button'),
             size_hint_x=None,
-            width=dp(220),
+            width=dp(140),
             height=dp(40),
             background_color=(0.2, 0.6, 1, 1),
             color=(1, 1, 1, 1),
