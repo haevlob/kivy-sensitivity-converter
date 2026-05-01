@@ -1214,16 +1214,17 @@ class ConverterApp(App):
         )
         about_inner.add_widget(self.about_label)
 
-        self.donate_btn = Button(
-            text=self.converter.get_text('donate_button'),
+        self.donate_label = Label(
+            text='[u][color=3366cc]Поддержать разработчика[/color][/u]',
             size_hint_y=None,
-            height=dp(50),
-            background_color=(0.2, 0.6, 1, 1),
-            color=(1, 1, 1, 1),
-            font_size=dp(15)
+            height=dp(40),
+            markup=True,
+            font_size=dp(14),
+            halign='left',
+            valign='middle'
         )
-        self.donate_btn.bind(on_press=lambda *args: webbrowser.open('https://boosty.to/hevlob_so_2/donate'))
-        about_inner.add_widget(self.donate_btn)
+        self.donate_label.bind(on_touch_down=self.on_donate_click)
+        about_inner.add_widget(self.donate_label)
 
     def update_menu_texts(self):
         self.menu_header.text = self.converter.get_text('menu')
@@ -1231,7 +1232,13 @@ class ConverterApp(App):
         self.lang_label.text = self.converter.get_text('language')
         self.about_item.title = self.converter.get_text('about_title')
         self.about_label.text = self.converter.get_text('about_text')
-        self.donate_btn.text = self.converter.get_text('donate_button')
+        self.donate_label.text = '[u][color=3366cc]Поддержать разработчика[/color][/u]'
+
+    def on_donate_click(self, instance, touch):
+        if instance.collide_point(*touch.pos):
+            webbrowser.open('https://boosty.to/hevlob_so_2/donate')
+            return True
+        return False
 
     def toggle_menu(self, *args):
         if self.menu.x < 0:
