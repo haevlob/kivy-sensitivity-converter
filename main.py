@@ -296,16 +296,10 @@ para Standoff 2, PUBG Mobile e Call of Duty Mobile.
 © 2026 Taysin Dim. Todos os direitos reservados."""
             },
             'donate_button': {
-                'ru': 'Поддержать автора на Boosty',
-                'en': 'Support the author on Boosty',
-                'es': 'Apoyar al autor en Boosty',
-                'pt': 'Apoiar o autor no Boosty'
-            },
-            'author_page_button': {
-                'ru': 'Автор',
-                'en': 'Author',
-                'es': 'Autor',
-                'pt': 'Autor'
+                'ru': 'Поддержать разработчика',
+                'en': 'Support the developer',
+                'es': 'Apoyar al desarrollador',
+                'pt': 'Apoiar o desenvolvedor'
             }
         }
         self.langs = {
@@ -459,18 +453,7 @@ para Standoff 2, PUBG Mobile e Call of Duty Mobile.
         self.table_scroll.add_widget(self.table_frame)
 
         self.footer = BoxLayout(orientation='horizontal', size_hint_y=None, height=dp(50), padding=[dp(10), dp(5), dp(10), dp(5)])
-        self.add_widget(self.footer)
-        self.author_page_btn = Button(
-            text=self.get_text('author_page_button'),
-            size_hint_x=None,
-            width=dp(140),
-            height=dp(40),
-            background_color=(0.2, 0.6, 1, 1),
-            color=(1, 1, 1, 1),
-            font_size=dp(14)
-        )
-        self.author_page_btn.bind(on_press=lambda *args: webbrowser.open('https://boosty.to/hevlob_so_2'))
-        self.footer.add_widget(self.author_page_btn)
+        self.add_widget(self.footer)   
         self.footer.add_widget(Widget())
 
         self.update_ui()
@@ -492,8 +475,7 @@ para Standoff 2, PUBG Mobile e Call of Duty Mobile.
         for mode, btn in self.mode_buttons.items():
             btn.text = self.get_text(mode)
         for sensor, btn in self.sensor_buttons.items():
-            btn.text = self.get_text('sens' if sensor == 'sensitivity' else 'gyro')
-        self.author_page_btn.text = self.get_text('author_page_button')
+            btn.text = self.get_text('sens' if sensor == 'sensitivity' else 'gyro') 
         self.update_ui()
 
     def on_left_game_change(self, value):
