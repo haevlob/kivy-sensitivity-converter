@@ -18,6 +18,8 @@ from kivy.animation import Animation
 from kivy.uix.accordion import Accordion, AccordionItem
 from kivy.uix.widget import Widget
 from kivy.graphics import Color, Rectangle
+from kivy.uix.popup import Popup
+from kivy.storage.jsonstore import JsonStore
 import webbrowser
 
 class Blocker(Widget):
@@ -296,10 +298,10 @@ para Standoff 2, PUBG Mobile e Call of Duty Mobile.
 © 2026 Taysin Dim. Todos os direitos reservados."""
             },
             'donate_button': {
-                'ru': 'Поддержать разработчика',
-                'en': 'Support the developer',
-                'es': 'Apoyar al desarrollador',
-                'pt': 'Apoiar o desenvolvedor'
+                'ru': 'Страница автора',
+                'en': 'Author page',
+                'es': 'Página del autor',
+                'pt': 'Página do autor'
             }
         }
         self.langs = {
@@ -1166,7 +1168,62 @@ class ConverterApp(App):
         root.add_widget(self.menu_btn)
         self.build_menu()
         Window.bind(size=self.on_window_resize)
+        
+        self.store = JsonStore('privacy.json')
+        if not self.store.exists('accepted'):
+            Clock.schedule_once(lambda dt: self.show_privacy_dialog(), 0.5)
+
         return root
+    
+    def show_privacy_dialog(self):
+        content = BoxLayout(orientation='vertical', padding=dp(15), spacing=dp(10))
+
+        scroll = ScrollView(size_hint=(1, 1), do_scroll_x=False, do_scroll_y=True)  
+        
+        label = Label(
+            text = """Политика конфиденциальности\n\nПриложение Mobile Games Sens Converter\nНЕ собирает, НЕ хранит и НЕ передаёт\nваши персональные данные.\n\nПриложение работает полностью офлайн.\nКнопка "Страница автора" открывает внешний сайт\nboosty.to — переход происходит только\nпо вашему желанию.\n\nНажав «Принять» вы соглашаетесь\nс политикой конфиденциальности.""",
+            halign='center',
+            valign='top',
+            text_size=(dp(260), None),
+            size_hint_y=None,            
+        )
+        label.bind(texture_size=lambda instance, value: setattr(instance, 'height', value[1]))
+
+        scroll.add_widget(label)
+        content.add_widget(scroll)
+
+        btn_layout = BoxLayout(
+            orientation='horizontal',
+            size_hint_y=None,
+            height=dp(50),
+            spacing=dp(10)
+        )
+
+        decline_btn = Button(text='Отклонить')
+        accept_btn = Button(text='Принять')
+
+        btn_layout.add_widget(decline_btn)
+        btn_layout.add_widget(accept_btn)
+        content.add_widget(btn_layout)
+
+        self.privacy_popup = Popup(
+            title='Соглашение',
+            content=content,
+            size_hint=(0.9, None),
+            height=dp(420),
+            auto_dismiss=False  # Нельзя закрыть кликом вне окна
+         )
+
+        def on_accept(instance):
+            self.store.put('accepted', value=True)  # Запоминаем согласие
+            self.privacy_popup.dismiss()
+
+        def on_decline(instance):
+            self.stop()  # Закрывает приложение
+
+        accept_btn.bind(on_press=on_accept)
+        decline_btn.bind(on_press=on_decline)
+        self.privacy_popup.open()
 
     def on_window_resize(self, instance, value):
         self.menu.height = Window.height
@@ -1210,12 +1267,13 @@ class ConverterApp(App):
             valign='top',
             text_size=(dp(230), None),
             font_size=dp(13),
-            markup=False
+            markup=True,
+            color=(0.2, 0.4, 0.9, 1)  # ← синий цвет (R, G, B, прозрачность)
         )
         about_inner.add_widget(self.about_label)
 
         self.donate_label = Label(
-            text='[u][color=3366cc]Поддержать разработчика[/color][/u]',
+            text='[u][color=3366cc]Страница автора[/color][/u]',
             size_hint_y=None,
             height=dp(40),
             markup=True,
@@ -1232,11 +1290,11 @@ class ConverterApp(App):
         self.lang_label.text = self.converter.get_text('language')
         self.about_item.title = self.converter.get_text('about_title')
         self.about_label.text = self.converter.get_text('about_text')
-        self.donate_label.text = '[u][color=3366cc]Поддержать разработчика[/color][/u]'
+        self.donate_label.text = '[u][color=3366cc]Страница автора[/color][/u]'
 
     def on_donate_click(self, instance, touch):
         if instance.collide_point(*touch.pos):
-            webbrowser.open('https://boosty.to/hevlob_so_2/donate')
+            webbrowser.open('https://boosty.to/hevlob_so_2')
             return True
         return False
 
@@ -1252,7 +1310,7 @@ class ConverterApp(App):
             anim.start(self.menu)
             self.root.remove_widget(self.blocker)
             del self.blocker
-            self.menu_btn.text = ' '
+            self.menu_btn.text = '☰'
 
 if __name__ == '__main__':
     ConverterApp().run()
