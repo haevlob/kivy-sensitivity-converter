@@ -2,7 +2,7 @@
 title = Mobile Games Sens Converter
 package.name = sensitivityconverter
 package.domain = com.taysindim
-version = 1.1
+version = 1.2
 author = Taysin Dim
 author_email = haevlob@gmail.com
 
