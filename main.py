@@ -251,7 +251,7 @@ class SensitivityConverter(BoxLayout):
             },
             'about_text': {
                 'ru': """Mobile Games Sens Converter
-Версия: 1.2
+Версия: 1.3
 Автор: Taysin Dim
 Удобный конвертер чувствительности и гироскопа
 для Standoff 2, PUBG Mobile и Call of Duty Mobile.
@@ -262,7 +262,7 @@ class SensitivityConverter(BoxLayout):
 • Без рекламы и платных функций
 © 2026 Taysin Dim. Все права защищены.""",
                 'en': """Mobile Games Sens Converter
-Version: 1.2
+Version: 1.3
 Author: Taysin Dim
 Convenient sensitivity and gyroscope converter
 for Standoff 2, PUBG Mobile and Call of Duty Mobile.
@@ -273,7 +273,7 @@ for Standoff 2, PUBG Mobile and Call of Duty Mobile.
 • No ads or paid features
 © 2026 Taysin Dim. All rights reserved.""",
                 'es': """Mobile Games Sens Converter
-Versión: 1.2
+Versión: 1.3
 Autor: Taysin Dim
 Convertidor práctico de sensibilidad y giroscopio
 para Standoff 2, PUBG Mobile y Call of Duty Mobile.
@@ -284,7 +284,7 @@ para Standoff 2, PUBG Mobile y Call of Duty Mobile.
 • Sin anuncios ni funciones de pago
 © 2026 Taysin Dim. Todos los derechos reservados.""",
                 'pt': """Mobile Games Sens Converter
-Versão: 1.2
+Versão: 1.3
 Autor: Taysin Dim
 Conversor conveniente de sensibilidade e giroscópio
 para Standoff 2, PUBG Mobile e Call of Duty Mobile.
@@ -1204,8 +1204,7 @@ class ConverterApp(App):
             halign='left',
             valign='top',
             text_size=(dp(230), None),
-            font_size=dp(13),
-            markup=True,
+            font_size=dp(13),            
             color=(0.2, 0.4, 0.9, 1)  # ← синий цвет (R, G, B, прозрачность)
         )
         about_inner.add_widget(self.about_label)     
