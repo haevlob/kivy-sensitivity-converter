@@ -253,7 +253,7 @@ class SensitivityConverter(BoxLayout):
             },
             'about_text': {
                 'ru': """Mobile Games Sens Converter
-Версия: 1.0
+Версия: 1.1
 Автор: Taysin Dim
 Удобный конвертер чувствительности и гироскопа
 для Standoff 2, PUBG Mobile и Call of Duty Mobile.
@@ -264,7 +264,7 @@ class SensitivityConverter(BoxLayout):
 • Без рекламы и платных функций
 © 2026 Taysin Dim. Все права защищены.""",
                 'en': """Mobile Games Sens Converter
-Version: 1.0
+Version: 1.1
 Author: Taysin Dim
 Convenient sensitivity and gyroscope converter
 for Standoff 2, PUBG Mobile and Call of Duty Mobile.
@@ -275,7 +275,7 @@ for Standoff 2, PUBG Mobile and Call of Duty Mobile.
 • No ads or paid features
 © 2026 Taysin Dim. All rights reserved.""",
                 'es': """Mobile Games Sens Converter
-Versión: 1.0
+Versión: 1.1
 Autor: Taysin Dim
 Convertidor práctico de sensibilidad y giroscopio
 para Standoff 2, PUBG Mobile y Call of Duty Mobile.
@@ -286,7 +286,7 @@ para Standoff 2, PUBG Mobile y Call of Duty Mobile.
 • Sin anuncios ni funciones de pago
 © 2026 Taysin Dim. Todos los derechos reservados.""",
                 'pt': """Mobile Games Sens Converter
-Versão: 1.0
+Versão: 1.1
 Autor: Taysin Dim
 Conversor conveniente de sensibilidade e giroscópio
 para Standoff 2, PUBG Mobile e Call of Duty Mobile.
@@ -1273,7 +1273,7 @@ class ConverterApp(App):
         about_inner.add_widget(self.about_label)
 
         self.donate_label = Label(
-            text='[u][color=3366cc]Страница автора[/color][/u]',
+            text=f'[u][color=3366cc]{self.converter.get_text("donate_button")}[/color][/u]',
             size_hint_y=None,
             height=dp(40),
             markup=True,
@@ -1290,7 +1290,7 @@ class ConverterApp(App):
         self.lang_label.text = self.converter.get_text('language')
         self.about_item.title = self.converter.get_text('about_title')
         self.about_label.text = self.converter.get_text('about_text')
-        self.donate_label.text = '[u][color=3366cc]Страница автора[/color][/u]'
+        self.donate_label.text = f'[u][color=3366cc]{self.converter.get_text("donate_button")}[/color][/u]'
 
     def on_donate_click(self, instance, touch):
         if instance.collide_point(*touch.pos):
