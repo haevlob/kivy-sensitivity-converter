@@ -13,11 +13,14 @@ source.dir = .
 source.include_exts = py,png,jpg,kv,atlas
 requirements = python3,kivy==2.3.0
 orientation = portrait
-android.minapi = 21
-android.api = 35
-android.ndk = 25b
+
+# === ОБНОВЛЁННЫЕ НАСТРОЙКИ ANDROID (Android 16) ===
+android.minapi = 26
+android.api = 36
+android.ndk = 27.2.12479018
 android.accept_sdk_license = True
 android.release = True
 android.release_artifact = apk
+
 [android]
-android.permissions = INTERNET, ACCESS_NETWORK_STATE
+android.permissions = ACCESS_NETWORK_STATE
