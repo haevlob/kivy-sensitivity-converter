@@ -298,10 +298,10 @@ para Standoff 2, PUBG Mobile e Call of Duty Mobile.
 © 2026 Taysin Dim. Todos os direitos reservados."""
             },
             'donate_button': {
-                'ru': 'Страница автора',
-                'en': 'Author page',
-                'es': 'Página del autor',
-                'pt': 'Página do autor'
+                'ru': 'Политика конфиденциальности',
+                'en': 'Privacy Policy',
+                'es': 'Política de privacidad',
+                'pt': 'Política de privacidade'
             }
         }
         self.langs = {
@@ -1294,7 +1294,7 @@ class ConverterApp(App):
 
     def on_donate_click(self, instance, touch):
         if instance.collide_point(*touch.pos):
-            webbrowser.open('https://github.com/haevlob')
+            webbrowser.open('https://haevlob.github.io/privacy-policy/')
             return True
         return False
 
