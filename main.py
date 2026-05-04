@@ -1294,7 +1294,7 @@ class ConverterApp(App):
 
     def on_donate_click(self, instance, touch):
         if instance.collide_point(*touch.pos):
-            webbrowser.open('https://boosty.to/hevlob_so_2')
+            webbrowser.open('https://github.com/haevlob')
             return True
         return False
 
