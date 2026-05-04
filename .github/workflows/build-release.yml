@@ -33,7 +33,7 @@ jobs:
         run: |
           APK_PATH=$(ls bin/*.apk | head -1)
           echo "apk_path=$APK_PATH" >> $GITHUB_OUTPUT
-          VERSION=$(grep -oP 'version = \K[0-9.]+' buildozer.spec || echo "1.0")
+          VERSION=$(grep -oP 'version = \K[0-9.]+' buildozer.spec || echo "1.1")
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "tag=v$VERSION" >> $GITHUB_OUTPUT
 
