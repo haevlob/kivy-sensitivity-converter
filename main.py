@@ -252,48 +252,36 @@ class SensitivityConverter(BoxLayout):
             'about_text': {
                 'ru': """Mobile Games Sens Converter
 Версия: 1.3
-Автор: Taysin Dim
 Удобный конвертер чувствительности и гироскопа
 для Standoff 2, PUBG Mobile и Call of Duty Mobile.
 • Точная конвертация сенсы и гироскопа
 • Автоматический и ручной режим
-• Поддержка ускорения (PUBG)
-• Работает полностью оффлайн
-• Без рекламы и платных функций
-© 2026 Taysin Dim. Все права защищены.""",
+• Поддержка ускорений
+• Работает полностью оффлайн""",
                 'en': """Mobile Games Sens Converter
 Version: 1.3
-Author: Taysin Dim
 Convenient sensitivity and gyroscope converter
 for Standoff 2, PUBG Mobile and Call of Duty Mobile.
 • Accurate sensitivity and gyroscope conversion
 • Automatic and manual mode
-• Acceleration support (PUBG)
-• Works completely offline
-• No ads or paid features
-© 2026 Taysin Dim. All rights reserved.""",
+• Acceleration support
+• Works completely offline""",
                 'es': """Mobile Games Sens Converter
 Versión: 1.3
-Autor: Taysin Dim
 Convertidor práctico de sensibilidad y giroscopio
 para Standoff 2, PUBG Mobile y Call of Duty Mobile.
 • Conversión precisa de sensibilidad y giroscopio
 • Modo automático y manual
-• Soporte de aceleración (PUBG)
-• Funciona completamente sin conexión
-• Sin anuncios ni funciones de pago
-© 2026 Taysin Dim. Todos los derechos reservados.""",
+• Soporte de aceleración
+• Funciona completamente sin conexión""",
                 'pt': """Mobile Games Sens Converter
 Versão: 1.3
-Autor: Taysin Dim
 Conversor conveniente de sensibilidade e giroscópio
 para Standoff 2, PUBG Mobile e Call of Duty Mobile.
 • Conversão precisa de sensibilidade e giroscópio
 • Modo automático e manual
-• Suporte à aceleração (PUBG)
-• Funciona completamente offline
-• Sem anúncios ou recursos pagos
-© 2026 Taysin Dim. Todos os direitos reservados."""
+• Suporte à aceleração
+• Funciona completamente offline"""
             },
         }
         self.langs = {
