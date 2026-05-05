@@ -251,37 +251,49 @@ class SensitivityConverter(BoxLayout):
             },
             'about_text': {
                 'ru': """Mobile Games Sens Converter
-Версия: 1.31
+Версия: 1.2
+Автор: Taysin Dim
 Удобный конвертер чувствительности и гироскопа
 для Standoff 2, PUBG Mobile и Call of Duty Mobile.
 • Точная конвертация сенсы и гироскопа
 • Автоматический и ручной режим
-• Поддержка ускорений
-• Работает полностью оффлайн""",
+• Поддержка ускорения (PUBG)
+• Работает полностью оффлайн
+• Без рекламы и платных функций
+© 2026 Taysin Dim. Все права защищены.""",
                 'en': """Mobile Games Sens Converter
-Version: 1.31
+Version: 1.2
+Author: Taysin Dim
 Convenient sensitivity and gyroscope converter
 for Standoff 2, PUBG Mobile and Call of Duty Mobile.
 • Accurate sensitivity and gyroscope conversion
 • Automatic and manual mode
-• Acceleration support
-• Works completely offline""",
+• Acceleration support (PUBG)
+• Works completely offline
+• No ads or paid features
+© 2026 Taysin Dim. All rights reserved.""",
                 'es': """Mobile Games Sens Converter
-Versión: 1.31
+Versión: 1.2
+Autor: Taysin Dim
 Convertidor práctico de sensibilidad y giroscopio
 para Standoff 2, PUBG Mobile y Call of Duty Mobile.
 • Conversión precisa de sensibilidad y giroscopio
 • Modo automático y manual
-• Soporte de aceleración
-• Funciona completamente sin conexión""",
+• Soporte de aceleración (PUBG)
+• Funciona completamente sin conexión
+• Sin anuncios ni funciones de pago
+© 2026 Taysin Dim. Todos los derechos reservados.""",
                 'pt': """Mobile Games Sens Converter
-Versão: 1.31
+Versão: 1.2
+Autor: Taysin Dim
 Conversor conveniente de sensibilidade e giroscópio
 para Standoff 2, PUBG Mobile e Call of Duty Mobile.
 • Conversão precisa de sensibilidade e giroscópio
 • Modo automático e manual
-• Suporte à aceleração
-• Funciona completamente offline"""
+• Suporte à aceleração (PUBG)
+• Funciona completamente offline
+• Sem anúncios ou recursos pagos
+© 2026 Taysin Dim. Todos os direitos reservados."""
             },
         }
         self.langs = {
